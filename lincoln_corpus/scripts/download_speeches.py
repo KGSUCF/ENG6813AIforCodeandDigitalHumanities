@@ -193,18 +193,19 @@ GUTENBERG_TITLE_MAP: dict[str, tuple[int, str]] = {
     "LINC_079": (6, "SPEECH AT SANITARY FAIR, BALTIMORE,"),
     "LINC_080": (6, "ADDRESS TO THE 164TH OHIO REGIMENT,"),
     "LINC_081": (6, "ADDRESS TO THE 166TH OHIO REGIMENT,"),
-    "LINC_082": (6, "ADDRESS TO THE 148TH OHIO REGIMENT,"),
+    "LINC_082": (6, "ADDRESS TO THE ONE HUNDRED AND FORTY-EIGHTH OHIO REGIMENT"),
     "LINC_086": (6, "MESSAGE TO CONGRESS ON THE THIRTEENTH AMENDMENT,"),
     "LINC_087": (6, "SECOND INAUGURAL ADDRESS."),
     "LINC_089": (6, "LAST PUBLIC ADDRESS,"),
-    "LINC_102": (5, "MESSAGE ON THE TRENT AFFAIR,"),
+    "LINC_102": (4, "TRENT AFFAIR"),
     "LINC_109": (6, "ADDRESS TO AN INDIANA REGIMENT,"),
     "LINC_114": (6, "PROCLAMATION OFFERING PARDON TO DESERTERS,"),
     "LINC_115": (6, "MESSAGE ON THE FALL OF SAVANNAH,"),
     "LINC_116": (6, "LETTER TO ALBERT G. HODGES,"),
-    "LINC_106": (5, "MESSAGE TO THE SENATE TRANSMITTING DIPLOMATIC CORRESPONDENCE"),
-    "LINC_122": (6, "RESPONSE TO A PEACE PROPOSAL,"),
-    "LINC_125": (6, "ANNUAL MESSAGE TRANSMITTING THE EMANCIPATION PROCLAMATION"),
+    "LINC_106": (4, "DIPLOMATIC CORRESPONDENCE ON SLAVERY"),
+    "LINC_115": (6, "FALL OF SAVANNAH"),
+    "LINC_122": (6, "HAMPTON ROADS"),
+    "LINC_125": (5, "THIRD ANNUAL MESSAGE"),
 }
 
 # Speeches with no surviving full text — write a brief scholarly note instead
@@ -353,16 +354,17 @@ def extract_gutenberg_section(vol_index: int, heading: str) -> str | None:
             if body:
                 return body
 
-    # 3. Keyword-within-volume fallback
-    keywords = [w for w in re.findall(r"[A-Z]{4,}", core) if w not in
-                {"SPEECH", "ADDRESS", "MESSAGE", "LETTER", "PROCLAMATION",
-                 "REPLY", "ILLINOIS", "OHIO", "INDIANA", "KANSAS"}]
-    if len(keywords) >= 2:
+    # 3. Keyword-within-volume fallback — use place/subject words from heading
+    generic = {"ADDRESS", "MESSAGE", "LETTER", "PROCLAMATION",
+               "REPLY", "FRAGMENT", "ANNUAL", "SPECIAL"}
+    keywords = [w for w in re.findall(r"[A-Z]{3,}", core) if w not in generic]
+    if keywords:
         for i, line in enumerate(lines):
             s = line.strip()
             if not s or re.search(r"[a-z]", s):
                 continue
-            if sum(1 for kw in keywords if kw in s.upper()) >= min(2, len(keywords)):
+            # Any single distinctive keyword is enough within a mapped volume
+            if any(kw in s.upper() for kw in keywords):
                 body = _extract_from(lines, i)
                 if body:
                     return body
