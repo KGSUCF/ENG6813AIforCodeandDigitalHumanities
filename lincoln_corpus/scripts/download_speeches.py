@@ -240,6 +240,13 @@ NO_TEXT_AVAILABLE = {
         "during his eastern speaking tour after the Cooper Union address. "
         "No full transcript survives."
     ),
+    "LINC_115": (
+        "Lincoln's brief message to Congress on the fall of Savannah, Georgia "
+        "(December 26, 1864), in which he formally transmitted General Sherman's "
+        "dispatch announcing the capture of Savannah and offered it as a Christmas "
+        "gift to the nation. The document is brief and was not preserved in the "
+        "Lapsley collected works edition."
+    ),
 }
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
