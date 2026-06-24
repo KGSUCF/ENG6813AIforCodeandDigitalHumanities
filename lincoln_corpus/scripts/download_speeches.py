@@ -104,6 +104,102 @@ GUTENBERG_VOLS = [
 
 HEADERS = {"User-Agent": "Lincoln-Corpus-Builder/1.0 (academic research)"}
 
+# ── Exact Gutenberg heading map ───────────────────────────────────────────────
+# Maps LINC ID → (vol_index 0-6, exact heading string from Lapsley edition)
+# Generated from list_gutenberg_sections.py diagnostic output.
+
+GUTENBERG_TITLE_MAP: dict[str, tuple[int, str]] = {
+    # Vol 1 (index 0): 1832–1843
+    "LINC_001": (0, "ADDRESS BEFORE THE YOUNG MEN'S LYCEUM"),
+    "LINC_002": (0, "COMMUNICATION TO THE PEOPLE OF SANGAMO COUNTY"),
+    "LINC_003": (0, "PROTEST IN THE ILLINOIS LEGISLATURE"),
+    "LINC_004": (0, "ADDRESS BEFORE THE SPRINGFIELD WASHINGTON TEMPERANCE SOCIETY"),
+    "LINC_006": (0, "EULOGY ON HENRY CLAY"),
+
+    # Vol 2 (index 1): 1843–1858
+    "LINC_005": (1, "TEMPERANCE ADDRESS"),
+    "LINC_007": (1, "RESOLUTIONS IN THE UNITED STATES HOUSE OF REPRESENTATIVES,"),
+    "LINC_008": (1, "SPEECH ON DECLARATION OF WAR ON MEXICO"),
+    "LINC_010": (1, "SPEECH DELIVERED AT WORCESTER, MASS., ON SEPT. 12, 1848."),
+    "LINC_012": (1, "EULOGY ON HENRY CLAY,"),
+    "LINC_016": (1, "SPEECH AT KALAMAZOO, MICHIGAN,"),
+    "LINC_017": (1, "FRAGMENT OF SPEECH AT GALENA, ILLINOIS"),
+    "LINC_112": (1, "GENERAL TAYLOR AND THE VETO"),
+
+    # Vol 3 (index 2): 1858
+    "LINC_018": (2, "HOUSE DIVIDED"),
+    "LINC_019": (2, "SPEECH AT CHICAGO, JULY 10, 1858."),
+    "LINC_020": (2, "SPEECH AT SPRINGFIELD, JULY 17, 1858."),
+    "LINC_021": (2, "SPEECH AT LEWISTOWN, ILLINOIS,"),
+    "LINC_022": (2, "FIRST JOINT DEBATE AT OTTAWA,"),
+    "LINC_023": (2, "SECOND JOINT DEBATE AT FREEPORT,"),
+    "LINC_024": (2, "THIRD JOINT DEBATE AT JONESBORO,"),
+    "LINC_025": (2, "FOURTH JOINT DEBATE AT CHARLESTON,"),
+    "LINC_026": (2, "FIFTH JOINT DEBATE AT GALESBURG,"),
+    "LINC_027": (2, "SIXTH JOINT DEBATE AT QUINCY,"),
+    "LINC_028": (2, "SEVENTH JOINT DEBATE AT ALTON,"),
+
+    # Vol 4 (index 3): 1858–1860
+    "LINC_029": (4, "FRAGMENT OF SPEECH AT EDWARDSVILLE, ILL.,"),
+    "LINC_033": (3, "ADDRESS BEFORE THE WISCONSIN STATE AGRICULTURAL SOCIETY,"),
+    "LINC_034": (3, "SPEECH AT ELWOOD, KANSAS,"),
+    "LINC_037": (4, "FRAGMENT OF SPEECH AT LEAVENWORTH, KANSAS,"),
+    "LINC_038": (3, "ADDRESS AT COOPER INSTITUTE,"),
+
+    # Vol 5 (index 4): 1858–1862
+    "LINC_030": (4, "SPEECH AT COLUMBUS, OHIO."),
+    "LINC_031": (4, "SPEECH AT CINCINNATI OHIO, SEPTEMBER 17, 1859"),
+    "LINC_039": (4, "SPEECH AT HARTFORD, CONNECTICUT,"),
+    "LINC_040": (4, "SPEECH AT NEW HAVEN, CONNECTICUT, MARCH 6, 1860"),
+    "LINC_044": (4, "FAREWELL ADDRESS AT SPRINGFIELD, ILLINOIS."),
+    "LINC_046": (4, "ADDRESS TO THE LEGISLATURE OF OHIO AT COLUMBUS"),
+    "LINC_047": (4, "ADDRESS AT PITTSBURGH, PENNSYLVANIA"),
+    "LINC_048": (4, "ADDRESS TO THE LEGISLATURE OF NEW YORK, AT ALBANY,"),
+    "LINC_049": (4, "ADDRESS TO THE SENATE OF NEW JERSEY"),
+    "LINC_050": (4, "ADDRESS TO THE ASSEMBLY OF NEW JERSEY,"),
+    "LINC_051": (4, "ADDRESS IN THE HALL OF INDEPENDENCE, PHILADELPHIA,"),
+    "LINC_052": (4, "FIRST INAUGURAL ADDRESS."),
+    "LINC_053": (4, "PROCLAMATION CALLING FOR 75,000 MILITIA,"),
+    "LINC_054": (4, "MESSAGE TO CONGRESS IN SPECIAL SESSION,"),
+    "LINC_055": (4, "FIRST ANNUAL MESSAGE TO CONGRESS,"),
+    "LINC_100": (4, "ADDRESS AT CLEVELAND, OHIO,"),
+    "LINC_119": (4, "PROCLAMATION OF A NATIONAL FAST-DAY, AUGUST 12, 1861."),
+
+    # Vol 6 (index 5): 1862–1863
+    "LINC_056": (5, "SECOND ANNUAL MESSAGE TO CONGRESS,"),
+    "LINC_057": (5, "MESSAGE TO CONGRESS ON COMPENSATED EMANCIPATION,"),
+    "LINC_060": (5, "ABOLISHING SLAVERY IN WASHINGTON, D.C."),
+    "LINC_061": (5, "APPEAL TO BORDER-STATES IN FAVOR OF COMPENSATED EMANCIPATION."),
+    "LINC_064": (5, "LETTER TO HORACE GREELEY,"),
+    "LINC_065": (5, "PRELIMINARY EMANCIPATION PROCLAMATION,"),
+    "LINC_071": (5, "ORDER OF RETALIATION,"),
+    "LINC_073": (5, "PROCLAMATION FOR THANKSGIVING, JULY 15, 1863"),
+    "LINC_108": (5, "REPLY TO REQUEST THE PRESIDENT ISSUE A PROCLAMATION OF EMANCIPATION."),
+    "LINC_117": (5, "TO THE WORKING-MEN OF MANCHESTER, ENGLAND."),
+    "LINC_118": (5, "TO THE WORKING-MEN OF LONDON, ENGLAND."),
+    "LINC_120": (5, "PROCLAMATION APPOINTING A NATIONAL FAST-DAY."),
+
+    # Vol 7 (index 6): 1863–1865
+    "LINC_067": (6, "EMANCIPATION PROCLAMATION."),
+    "LINC_074": (6, "ADDRESS AT GETTYSBURG,"),
+    "LINC_075": (6, "THIRD ANNUAL MESSAGE TO CONGRESS,"),
+    "LINC_076": (6, "PROCLAMATION OF AMNESTY AND RECONSTRUCTION. DECEMBER 8, 1863."),
+    "LINC_078": (6, "CALL FOR 500,000 VOLUNTEERS,"),
+    "LINC_079": (6, "SPEECH AT SANITARY FAIR, BALTIMORE,"),
+    "LINC_080": (6, "ADDRESS TO THE 164TH OHIO REGIMENT,"),
+    "LINC_081": (6, "ADDRESS TO THE 166TH OHIO REGIMENT,"),
+    "LINC_082": (6, "ADDRESS TO THE 148TH OHIO REGIMENT,"),
+    "LINC_086": (6, "MESSAGE TO CONGRESS ON THE THIRTEENTH AMENDMENT,"),
+    "LINC_087": (6, "SECOND INAUGURAL ADDRESS."),
+    "LINC_089": (6, "LAST PUBLIC ADDRESS,"),
+    "LINC_102": (6, "MESSAGE ON THE TRENT AFFAIR,"),
+    "LINC_109": (6, "ADDRESS TO AN INDIANA REGIMENT,"),
+    "LINC_114": (6, "PROCLAMATION OFFERING PARDON TO DESERTERS,"),
+    "LINC_115": (6, "MESSAGE ON THE FALL OF SAVANNAH,"),
+    "LINC_116": (6, "LETTER TO ALBERT G. HODGES,"),
+    "LINC_122": (6, "RESPONSE TO A PEACE PROPOSAL,"),
+}
+
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 
 def fetch(url: str) -> str | None:
@@ -182,8 +278,46 @@ def load_gutenberg_volumes():
     print()
 
 
-def search_gutenberg(title: str) -> str | None:
-    """Search Gutenberg volumes for a speech matching key words from title."""
+def extract_gutenberg_section(vol_index: int, heading: str) -> str | None:
+    """Extract text of a section from a Gutenberg volume by exact heading match."""
+    if vol_index >= len(_vol_cache) or not _vol_cache[vol_index]:
+        return None
+    lines = _vol_cache[vol_index].split("\n")
+    heading_upper = heading.upper().strip()
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip().upper() == heading_upper:
+            start = i
+            break
+        # Also try prefix match for headings that may have trailing punctuation variance
+        if line.strip().upper().startswith(heading_upper.rstrip(".,;")):
+            start = i
+            break
+    if start is None:
+        return None
+    body_lines = []
+    j = start + 1
+    while j < min(len(lines), start + 4000):
+        s = lines[j].strip()
+        # Stop at next all-caps heading (no lowercase, long enough)
+        if s and len(s) > 10 and not re.search(r"[a-z]", s) and j > start + 5:
+            break
+        body_lines.append(lines[j])
+        j += 1
+    body = "\n".join(body_lines).strip()
+    return body if len(body) > 200 else None
+
+
+def search_gutenberg(speech_id: str, title: str) -> str | None:
+    """Look up a speech in Gutenberg volumes using exact title map, then fuzzy fallback."""
+    # 1. Exact map lookup
+    if speech_id in GUTENBERG_TITLE_MAP:
+        vol_idx, heading = GUTENBERG_TITLE_MAP[speech_id]
+        text = extract_gutenberg_section(vol_idx, heading)
+        if text:
+            return text
+
+    # 2. Fuzzy keyword fallback across all volumes
     stopwords = {"the", "a", "an", "of", "on", "at", "to", "in", "and",
                  "for", "by", "with", "no", "reply", "address", "speech",
                  "message", "letter", "proclamation", "annual", "special",
@@ -194,33 +328,25 @@ def search_gutenberg(title: str) -> str | None:
     ][:6]
     if len(keywords) < 2:
         return None
-
     for vol_text in _vol_cache:
         if not vol_text:
             continue
         lines = vol_text.split("\n")
         for i, line in enumerate(lines):
             s = line.strip()
-            if not s or len(s) < 5:
+            if not s or len(s) < 5 or re.search(r"[a-z]", s):
                 continue
-            # Heading: mostly uppercase, no lowercase letters
-            if re.search(r"[a-z]", s):
-                continue
-            upper = s.upper()
-            hits = sum(1 for kw in keywords if kw in upper)
+            hits = sum(1 for kw in keywords if kw in s.upper())
             if hits >= min(3, len(keywords)):
-                # Extract text until next heading
                 body_lines = []
                 j = i + 1
                 while j < min(len(lines), i + 3000):
-                    l = lines[j]
-                    stripped = l.strip()
-                    # Stop at next all-caps heading (5+ words, no lowercase)
+                    stripped = lines[j].strip()
                     if (stripped and len(stripped) > 15
                             and not re.search(r"[a-z]", stripped)
                             and j > i + 10):
                         break
-                    body_lines.append(l)
+                    body_lines.append(lines[j])
                     j += 1
                 body = "\n".join(body_lines).strip()
                 if len(body) > 300:
@@ -253,7 +379,7 @@ def get_speech_text(speech_id: str, title: str) -> tuple[str | None, str]:
 
     # 3. Gutenberg volumes
     load_gutenberg_volumes()
-    text = search_gutenberg(title)
+    text = search_gutenberg(speech_id, title)
     if text and len(text) > 100:
         return text, "Project Gutenberg Collected Works"
 
