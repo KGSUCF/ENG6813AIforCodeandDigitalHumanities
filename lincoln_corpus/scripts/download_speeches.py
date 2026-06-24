@@ -1,152 +1,178 @@
 """
-Lincoln Corpus Downloader
-=========================
-Run this script on your LOCAL machine to download Lincoln speech texts
-from UCSB and the University of Michigan Collected Works.
+Lincoln Corpus Downloader — Gutenberg Edition
+==============================================
+Downloads Lincoln's complete works from Project Gutenberg as plain text,
+then splits them into individual speech files matched to corpus_index.csv.
 
 REQUIREMENTS: Python 3.6 or later — NO additional installs needed.
-This script uses only Python's built-in standard library.
 
-HOW TO RUN:
-  1. Open a terminal (Mac: Terminal app; Windows: Command Prompt or PowerShell)
-  2. Navigate to the scripts folder, e.g.:
-       cd Desktop/ENG6813AIforCodeandDigitalHumanities/lincoln_corpus/scripts
-  3. Run:
-       python download_speeches.py
+HOW TO RUN (from your ABC/lincoln folder):
+    python download_speeches.py
 
-Speeches will be saved to the speeches/ folder one level up.
+Project Gutenberg serves plain .txt files — no HTML scraping, no 403 errors.
 """
 
 import csv
 import os
 import re
 import time
-import argparse
 import urllib.request
 import urllib.error
 from pathlib import Path
-from html.parser import HTMLParser
 
+# ── Gutenberg plain-text volume URLs ─────────────────────────────────────────
+# The Papers and Writings of Abraham Lincoln (7 volumes, edited by Lapsley)
+GUTENBERG_VOLUMES = {
+    1: "https://www.gutenberg.org/files/2653/2653-0.txt",  # 1832–1843
+    2: "https://www.gutenberg.org/files/2654/2654-0.txt",  # 1843–1858
+    3: "https://www.gutenberg.org/files/2655/2655-0.txt",  # 1858–1858
+    4: "https://www.gutenberg.org/files/2656/2656-0.txt",  # 1858–1860
+    5: "https://www.gutenberg.org/files/2657/2657-0.txt",  # 1858–1862
+    6: "https://www.gutenberg.org/files/2658/2658-0.txt",  # 1862–1863
+    7: "https://www.gutenberg.org/files/2659/2659-0.txt",  # 1863–1865
+}
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Minimal HTML text extractor (no third-party libraries needed)
-# ──────────────────────────────────────────────────────────────────────────────
+# Wikisource raw-text API for speeches with confirmed Wikisource pages
+# (returns plain wikitext — easier to clean than HTML)
+WIKISOURCE_OVERRIDES = {
+    "LINC_004": "https://en.wikisource.org/w/index.php?title=Perpetuation_of_Our_Political_Institutions&action=raw",
+    "LINC_018": "https://en.wikisource.org/w/index.php?title=House_Divided_Speech&action=raw",
+    "LINC_038": "https://en.wikisource.org/w/index.php?title=Cooper_Union_address&action=raw",
+    "LINC_044": "https://en.wikisource.org/w/index.php?title=Farewell_Address_at_Springfield&action=raw",
+    "LINC_052": "https://en.wikisource.org/w/index.php?title=Abraham_Lincoln%27s_First_Inaugural_Address&action=raw",
+    "LINC_064": "https://en.wikisource.org/w/index.php?title=Letter_to_Horace_Greeley_(August_22,_1862)&action=raw",
+    "LINC_065": "https://en.wikisource.org/w/index.php?title=Preliminary_Emancipation_Proclamation&action=raw",
+    "LINC_067": "https://en.wikisource.org/w/index.php?title=Emancipation_Proclamation&action=raw",
+    "LINC_073": "https://en.wikisource.org/w/index.php?title=Proclamation_of_Thanksgiving_(1863)&action=raw",
+    "LINC_074": "https://en.wikisource.org/w/index.php?title=Gettysburg_Address&action=raw",
+    "LINC_087": "https://en.wikisource.org/w/index.php?title=Abraham_Lincoln%27s_Second_Inaugural_Address&action=raw",
+    "LINC_089": "https://en.wikisource.org/w/index.php?title=Last_public_address_(Lincoln)&action=raw",
+}
 
-class _TextExtractor(HTMLParser):
-    """Extract plain text from HTML, skipping scripts/styles/nav."""
+HEADERS = {
+    "User-Agent": "Lincoln-Corpus-Builder/1.0 (academic research; python urllib)"
+}
 
-    SKIP_TAGS = {"script", "style", "nav", "header", "footer", "aside", "noscript"}
+# ── HTTP fetch ────────────────────────────────────────────────────────────────
 
-    def __init__(self):
-        super().__init__()
-        self._skip_depth = 0
-        self._parts = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag in self.SKIP_TAGS:
-            self._skip_depth += 1
-
-    def handle_endtag(self, tag):
-        if tag in self.SKIP_TAGS and self._skip_depth > 0:
-            self._skip_depth -= 1
-
-    def handle_data(self, data):
-        if self._skip_depth == 0:
-            self._parts.append(data)
-
-    def get_text(self):
-        raw = " ".join(self._parts)
-        # Collapse whitespace
-        raw = re.sub(r"\n{3,}", "\n\n", raw)
-        raw = re.sub(r"[ \t]+", " ", raw)
-        return raw.strip()
-
-
-def html_to_text(html: str) -> str:
-    p = _TextExtractor()
-    p.feed(html)
-    return p.get_text()
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Target content extraction — pull the main speech body from each site
-# ──────────────────────────────────────────────────────────────────────────────
-
-def extract_ucsb(html: str) -> str:
-    """Pull speech body from presidency.ucsb.edu HTML."""
-    # The speech text lives between specific div markers
-    for pattern in [
-        r'class="field-docs-content"[^>]*>(.*?)</div>',
-        r'id="transcript"[^>]*>(.*?)</div>',
-        r'class="field-item even"[^>]*>(.*?)</div>',
-    ]:
-        m = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
-        if m:
-            return html_to_text(m.group(1))
-    # Fallback: strip all HTML
-    return html_to_text(html)
-
-
-def extract_umich(html: str) -> str:
-    """Pull speech body from quod.lib.umich.edu Lincoln pages."""
-    for pattern in [
-        r'<div[^>]+id="text"[^>]*>(.*?)</div>',
-        r'<div[^>]+class="[^"]*bodytext[^"]*"[^>]*>(.*?)</div>',
-    ]:
-        m = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
-        if m:
-            text = html_to_text(m.group(1))
-            if len(text) > 200:
-                return text
-    return html_to_text(html)
-
-
-def fetch_url(url: str) -> str | None:
-    """Fetch a URL and return the decoded HTML body, or None on failure."""
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        },
-    )
+def fetch_text(url: str) -> str | None:
+    """Fetch a URL and return decoded text, or None on failure."""
+    req = urllib.request.Request(url, headers=HEADERS)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             raw = resp.read()
-            # Try to detect encoding from headers or meta tag
-            charset = "utf-8"
             ct = resp.headers.get("Content-Type", "")
             m = re.search(r"charset=([\w-]+)", ct)
-            if m:
-                charset = m.group(1)
+            charset = m.group(1) if m else "utf-8"
             return raw.decode(charset, errors="replace")
     except urllib.error.HTTPError as e:
         print(f"HTTP {e.code}", end=" ")
-        return None
     except Exception as e:
-        print(f"ERROR({e})", end=" ")
-        return None
+        print(f"ERROR({type(e).__name__})", end=" ")
+    return None
 
+# ── Wikitext cleaner ──────────────────────────────────────────────────────────
 
-def fetch_speech(url: str) -> str | None:
+def clean_wikitext(wikitext: str) -> str:
+    """Strip wikitext markup, leaving readable plain text."""
+    t = wikitext
+    # Remove templates {{...}}
+    t = re.sub(r"\{\{[^}]*\}\}", "", t)
+    # Remove [[File:...]] and [[Image:...]]
+    t = re.sub(r"\[\[(File|Image):[^\]]*\]\]", "", t, flags=re.IGNORECASE)
+    # Convert [[link|text]] → text, [[link]] → link
+    t = re.sub(r"\[\[[^\]|]*\|([^\]]*)\]\]", r"\1", t)
+    t = re.sub(r"\[\[([^\]]*)\]\]", r"\1", t)
+    # Remove external links [url text] → text
+    t = re.sub(r"\[https?://\S+\s+([^\]]+)\]", r"\1", t)
+    # Remove section headers ==...==
+    t = re.sub(r"={2,}([^=]+)={2,}", r"\1", t)
+    # Remove bold/italic markup
+    t = re.sub(r"'{2,}", "", t)
+    # Remove HTML tags
+    t = re.sub(r"<[^>]+>", "", t)
+    # Collapse blank lines
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
+
+# ── Gutenberg volume cache & parser ──────────────────────────────────────────
+
+_volume_cache: dict[int, str] = {}
+
+def get_volume(vol: int) -> str | None:
+    """Download and cache a Gutenberg volume."""
+    if vol in _volume_cache:
+        return _volume_cache[vol]
+    url = GUTENBERG_VOLUMES.get(vol)
     if not url:
         return None
-    html = fetch_url(url)
-    if not html:
+    print(f"\n  [Gutenberg] Downloading Volume {vol}...", end=" ", flush=True)
+    text = fetch_text(url)
+    if text:
+        print(f"({len(text):,} chars)")
+        _volume_cache[vol] = text
+    else:
+        print("FAILED")
+    return text
+
+
+def find_in_gutenberg(title: str, date_str: str) -> str | None:
+    """
+    Search all Gutenberg volumes for a speech matching the title.
+    Returns the speech text if found, None otherwise.
+    """
+    # Build search keywords from the title
+    # Strip common words and punctuation
+    stopwords = {"the", "a", "an", "of", "on", "at", "to", "in", "and",
+                 "for", "by", "with", "no", "reply", "address", "speech",
+                 "message", "letter", "proclamation", "annual", "special"}
+    keywords = [
+        w.upper() for w in re.findall(r"[a-zA-Z]+", title)
+        if w.lower() not in stopwords and len(w) > 3
+    ][:5]  # use at most 5 keywords
+
+    if not keywords:
         return None
-    if "presidency.ucsb.edu" in url:
-        return extract_ucsb(html)
-    if "quod.lib.umich.edu" in url:
-        return extract_umich(html)
-    return html_to_text(html)
 
+    for vol in range(1, 8):
+        text = get_volume(vol)
+        if not text:
+            continue
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ──────────────────────────────────────────────────────────────────────────────
+        # Find candidate section headings (lines that are mostly uppercase)
+        lines = text.split("\n")
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            # Check if this line contains most of our keywords
+            upper = stripped.upper()
+            hits = sum(1 for kw in keywords if kw in upper)
+            if hits >= min(2, len(keywords)):
+                # Found a likely heading — extract text until next heading
+                section_lines = []
+                j = i + 1
+                while j < len(lines) and j < i + 2000:
+                    next_line = lines[j].strip().upper()
+                    # Stop at next all-caps heading (new speech)
+                    if (len(next_line) > 10 and
+                            next_line == lines[j].strip() and
+                            re.match(r"^[A-Z\s,\.\-\'\"]+$", lines[j].strip()) and
+                            len(lines[j].strip()) > 10 and
+                            j > i + 5):
+                        # Check it looks like a heading not just a sentence
+                        if not any(c in lines[j] for c in "abcdefghijklmnopqrstuvwxyz"):
+                            break
+                    section_lines.append(lines[j])
+                    j += 1
+
+                candidate = "\n".join(section_lines).strip()
+                if len(candidate) > 200:
+                    return candidate
+
+    return None
+
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def slugify(text: str) -> str:
     s = text.lower()
@@ -161,36 +187,20 @@ def make_filename(row: dict) -> str:
     return f"{date}_{slug}.txt"
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Main
-# ──────────────────────────────────────────────────────────────────────────────
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="Download Lincoln corpus speeches — no extra installs needed"
-    )
-    parser.add_argument(
-        "--output", default="../speeches",
-        help="Folder to save .txt files (default: ../speeches)"
-    )
-    parser.add_argument(
-        "--delay", type=float, default=2.0,
-        help="Seconds to wait between requests (default: 2)"
-    )
-    parser.add_argument(
-        "--index", default="../metadata/corpus_index.csv",
-        help="Path to corpus_index.csv"
-    )
-    args = parser.parse_args()
+    here = Path(__file__).parent.resolve()
 
-    out_dir = Path(args.output).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    index_path = Path(args.index).resolve()
-
+    # Look for corpus_index.csv in same folder or one level up
+    index_path = here / "corpus_index.csv"
     if not index_path.exists():
-        print(f"Cannot find index file at: {index_path}")
-        print("Make sure you are running this from the scripts/ folder.")
+        index_path = here.parent / "metadata" / "corpus_index.csv"
+    if not index_path.exists():
+        print("Cannot find corpus_index.csv")
+        print("Make sure it is in the same folder as this script.")
         return
+
+    out_dir = here  # save speech files to same folder
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     with open(index_path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
@@ -203,8 +213,8 @@ def main():
     for row in rows:
         speech_id = row["id"]
         title = row["title"]
+        date = row.get("date", "")
         already = row.get("in_corpus", "").strip().lower() == "yes"
-        url = row.get("source_url", "").strip()
 
         if already:
             skipped += 1
@@ -214,47 +224,56 @@ def main():
         dest = out_dir / filename
 
         if dest.exists():
-            print(f"  [exists] {filename}")
+            print(f"  [exists]  {filename}")
             skipped += 1
             continue
 
-        if not url:
-            print(f"  [no url] {speech_id}: {title[:55]}")
-            failed.append((speech_id, title, "no source URL"))
-            continue
-
         print(f"  [{speech_id}] {title[:55]}...", end=" ", flush=True)
-        text = fetch_speech(url)
+
+        text = None
+
+        # 1. Try Wikisource override if available
+        ws_url = WIKISOURCE_OVERRIDES.get(speech_id)
+        if ws_url:
+            raw = fetch_text(ws_url)
+            if raw and len(raw) > 100:
+                text = clean_wikitext(raw)
+
+        # 2. Try Gutenberg volume search
+        if not text or len(text) < 100:
+            text = find_in_gutenberg(title, date)
 
         if not text or len(text) < 100:
-            print("empty/short — skipping")
-            failed.append((speech_id, title, "empty or too short"))
-            time.sleep(args.delay)
+            print("not found")
+            failed.append((speech_id, title))
+            time.sleep(1)
             continue
 
         header = (
             f"TITLE: {title}\n"
-            f"DATE: {row.get('date', '')}\n"
+            f"DATE: {date}\n"
             f"LOCATION: {row.get('location', '')}\n"
             f"TYPE: {row.get('type', '')}\n"
             f"TOPICS: {row.get('topics', '')}\n"
-            f"SOURCE: {url}\n"
+            f"SOURCE: {ws_url or 'Project Gutenberg Collected Works'}\n"
             f"{'=' * 60}\n\n"
         )
 
         dest.write_text(header + text, encoding="utf-8")
         print(f"saved ({len(text):,} chars)")
         downloaded += 1
-        time.sleep(args.delay)
+        time.sleep(0.5)
 
     print(f"\n{'─' * 50}")
     print(f"Downloaded : {downloaded}")
     print(f"Skipped    : {skipped}  (already in corpus)")
-    print(f"Failed     : {len(failed)}")
+    print(f"Not found  : {len(failed)}")
     if failed:
-        print("\nFailed items:")
-        for fid, ftitle, reason in failed:
-            print(f"  {fid}: {ftitle[:55]}  [{reason}]")
+        print("\nNot found in Gutenberg volumes:")
+        for fid, ftitle in failed:
+            print(f"  {fid}: {ftitle[:70]}")
+        print("\nFor these speeches, see corpus_index.csv for the source_url")
+        print("and copy/paste the text manually from that web page.")
 
 
 if __name__ == "__main__":
