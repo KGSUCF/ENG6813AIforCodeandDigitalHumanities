@@ -121,6 +121,7 @@ GUTENBERG_TITLE_MAP: dict[str, tuple[int, str]] = {
     "LINC_007": (1, "RESOLUTIONS IN THE UNITED STATES HOUSE OF REPRESENTATIVES,"),
     "LINC_008": (1, "SPEECH ON DECLARATION OF WAR ON MEXICO"),
     "LINC_010": (1, "SPEECH DELIVERED AT WORCESTER, MASS., ON SEPT. 12, 1848."),
+    "LINC_011": (1, "SPEECH IN BOSTON, MASSACHUSETTS,"),
     "LINC_012": (1, "EULOGY ON HENRY CLAY,"),
     "LINC_016": (1, "SPEECH AT KALAMAZOO, MICHIGAN,"),
     "LINC_017": (1, "FRAGMENT OF SPEECH AT GALENA, ILLINOIS"),
@@ -140,16 +141,20 @@ GUTENBERG_TITLE_MAP: dict[str, tuple[int, str]] = {
     "LINC_028": (2, "SEVENTH JOINT DEBATE AT ALTON,"),
 
     # Vol 4 (index 3): 1858–1860
-    "LINC_029": (4, "FRAGMENT OF SPEECH AT EDWARDSVILLE, ILL.,"),
     "LINC_033": (3, "ADDRESS BEFORE THE WISCONSIN STATE AGRICULTURAL SOCIETY,"),
     "LINC_034": (3, "SPEECH AT ELWOOD, KANSAS,"),
-    "LINC_037": (4, "FRAGMENT OF SPEECH AT LEAVENWORTH, KANSAS,"),
+    "LINC_035": (3, "SPEECH AT TROY, KANSAS,"),
+    "LINC_036": (3, "SPEECH AT ATCHISON, KANSAS,"),
+    "LINC_037": (3, "FRAGMENT OF SPEECH AT LEAVENWORTH, KANSAS,"),
     "LINC_038": (3, "ADDRESS AT COOPER INSTITUTE,"),
+
+    # Vol 5 (index 4): 1858–1862
+    "LINC_029": (4, "FRAGMENT OF SPEECH AT EDWARDSVILLE, ILL.,"),
 
     # Vol 5 (index 4): 1858–1862
     "LINC_030": (4, "SPEECH AT COLUMBUS, OHIO."),
     "LINC_031": (4, "SPEECH AT CINCINNATI OHIO, SEPTEMBER 17, 1859"),
-    "LINC_039": (4, "SPEECH AT HARTFORD, CONNECTICUT,"),
+    "LINC_039": (4, "SPEECH AT HARTFORD, CONNECTICUT, MARCH 5, 1860"),
     "LINC_040": (4, "SPEECH AT NEW HAVEN, CONNECTICUT, MARCH 6, 1860"),
     "LINC_044": (4, "FAREWELL ADDRESS AT SPRINGFIELD, ILLINOIS."),
     "LINC_046": (4, "ADDRESS TO THE LEGISLATURE OF OHIO AT COLUMBUS"),
@@ -192,12 +197,48 @@ GUTENBERG_TITLE_MAP: dict[str, tuple[int, str]] = {
     "LINC_086": (6, "MESSAGE TO CONGRESS ON THE THIRTEENTH AMENDMENT,"),
     "LINC_087": (6, "SECOND INAUGURAL ADDRESS."),
     "LINC_089": (6, "LAST PUBLIC ADDRESS,"),
-    "LINC_102": (6, "MESSAGE ON THE TRENT AFFAIR,"),
+    "LINC_102": (5, "MESSAGE ON THE TRENT AFFAIR,"),
     "LINC_109": (6, "ADDRESS TO AN INDIANA REGIMENT,"),
     "LINC_114": (6, "PROCLAMATION OFFERING PARDON TO DESERTERS,"),
     "LINC_115": (6, "MESSAGE ON THE FALL OF SAVANNAH,"),
     "LINC_116": (6, "LETTER TO ALBERT G. HODGES,"),
+    "LINC_106": (5, "MESSAGE TO THE SENATE TRANSMITTING DIPLOMATIC CORRESPONDENCE"),
     "LINC_122": (6, "RESPONSE TO A PEACE PROPOSAL,"),
+    "LINC_125": (6, "ANNUAL MESSAGE TRANSMITTING THE EMANCIPATION PROCLAMATION"),
+}
+
+# Speeches with no surviving full text — write a brief scholarly note instead
+NO_TEXT_AVAILABLE = {
+    "LINC_091": (
+        "This speech, delivered at Bloomington, Illinois on May 29, 1856, is "
+        "known as Lincoln's 'Lost Speech.' Contemporary accounts describe it as "
+        "the most powerful speech of Lincoln's career, but no transcription was "
+        "made at the time. Reporters were so captivated that they stopped taking "
+        "notes. A reconstruction published in 1896 by Henry Whitney is considered "
+        "unreliable by most historians. The speech is considered permanently lost."
+    ),
+    "LINC_092": (
+        "Lincoln's speech at Carlinville, Illinois (August 31, 1858) during the "
+        "Senate campaign against Stephen Douglas. No full transcript survives; "
+        "only brief newspaper summaries were published at the time."
+    ),
+    "LINC_093": (
+        "Lincoln's speech at Monmouth, Illinois (October 11, 1858) during the "
+        "Senate campaign. No full transcript survives."
+    ),
+    "LINC_094": (
+        "Lincoln's speech at Dayton, Ohio (September 17, 1859) during his "
+        "western campaign tour. No full transcript survives."
+    ),
+    "LINC_095": (
+        "Lincoln's speech at Hamilton, Ohio (September 17, 1859). "
+        "No full transcript survives."
+    ),
+    "LINC_098": (
+        "Lincoln's speech at Providence, Rhode Island (February 28, 1860) "
+        "during his eastern speaking tour after the Cooper Union address. "
+        "No full transcript survives."
+    ),
 }
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
@@ -278,23 +319,54 @@ def load_gutenberg_volumes():
     print()
 
 
+def _extract_from(lines: list[str], start: int) -> str | None:
+    body_lines = []
+    j = start + 1
+    while j < min(len(lines), start + 4000):
+        s = lines[j].strip()
+        if s and len(s) > 10 and not re.search(r"[a-z]", s) and j > start + 5:
+            break
+        body_lines.append(lines[j])
+        j += 1
+    body = "\n".join(body_lines).strip()
+    return body if len(body) > 200 else None
+
+
 def extract_gutenberg_section(vol_index: int, heading: str) -> str | None:
-    """Extract text of a section from a Gutenberg volume by exact heading match."""
+    """Extract text of a section from a Gutenberg volume by heading match."""
     if vol_index >= len(_vol_cache) or not _vol_cache[vol_index]:
         return None
     lines = _vol_cache[vol_index].split("\n")
     heading_upper = heading.upper().strip()
-    start = None
+    core = heading_upper.rstrip(".,; ")
+
+    # 1. Exact match
     for i, line in enumerate(lines):
-        if line.strip().upper() == heading_upper:
-            start = i
-            break
-        # Also try prefix match for headings that may have trailing punctuation variance
-        if line.strip().upper().startswith(heading_upper.rstrip(".,;")):
-            start = i
-            break
-    if start is None:
-        return None
+        s = line.strip().upper()
+        if s == heading_upper:
+            body = _extract_from(lines, i)
+            if body:
+                return body
+        # 2. Prefix match (line starts with core of heading)
+        if s.startswith(core):
+            body = _extract_from(lines, i)
+            if body:
+                return body
+
+    # 3. Keyword-within-volume fallback
+    keywords = [w for w in re.findall(r"[A-Z]{4,}", core) if w not in
+                {"SPEECH", "ADDRESS", "MESSAGE", "LETTER", "PROCLAMATION",
+                 "REPLY", "ILLINOIS", "OHIO", "INDIANA", "KANSAS"}]
+    if len(keywords) >= 2:
+        for i, line in enumerate(lines):
+            s = line.strip()
+            if not s or re.search(r"[a-z]", s):
+                continue
+            if sum(1 for kw in keywords if kw in s.upper()) >= min(2, len(keywords)):
+                body = _extract_from(lines, i)
+                if body:
+                    return body
+    return None
     body_lines = []
     j = start + 1
     while j < min(len(lines), start + 4000):
@@ -316,6 +388,12 @@ def search_gutenberg(speech_id: str, title: str) -> str | None:
         text = extract_gutenberg_section(vol_idx, heading)
         if text:
             return text
+        # Try the same heading in all other volumes (wrong volume in map)
+        for alt_idx in range(len(_vol_cache)):
+            if alt_idx != vol_idx:
+                text = extract_gutenberg_section(alt_idx, heading)
+                if text:
+                    return text
 
     # 2. Fuzzy keyword fallback across all volumes
     stopwords = {"the", "a", "an", "of", "on", "at", "to", "in", "and",
@@ -427,6 +505,23 @@ def main():
         dest = out_dir / filename
         if dest.exists():
             skipped += 1
+            continue
+
+        # Write stub for speeches with no surviving text
+        if sid in NO_TEXT_AVAILABLE:
+            stub = NO_TEXT_AVAILABLE[sid]
+            header = (
+                f"TITLE: {title}\n"
+                f"DATE: {row.get('date','')}\n"
+                f"LOCATION: {row.get('location','')}\n"
+                f"TYPE: {row.get('type','')}\n"
+                f"TOPICS: {row.get('topics','')}\n"
+                f"SOURCE: No surviving transcript\n"
+                f"{'='*60}\n\n"
+            )
+            dest.write_text(header + stub, encoding="utf-8")
+            print(f"  [{sid}] {title[:55]}... stub (no transcript survives)")
+            downloaded += 1
             continue
 
         print(f"  [{sid}] {title[:55]}...", end=" ", flush=True)
