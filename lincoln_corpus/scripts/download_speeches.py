@@ -1,18 +1,20 @@
 """
 Lincoln Corpus Downloader
 =========================
-Run this script on your LOCAL machine (not in a cloud environment)
-to download Lincoln speech texts from UCSB and the University of Michigan
-Collected Works.
+Run this script on your LOCAL machine to download Lincoln speech texts
+from UCSB and the University of Michigan Collected Works.
 
-Usage:
-    python download_speeches.py [--output ../speeches] [--delay 2]
+REQUIREMENTS: Python 3.6 or later — NO additional installs needed.
+This script uses only Python's built-in standard library.
 
-Requirements:
-    pip install requests beautifulsoup4
+HOW TO RUN:
+  1. Open a terminal (Mac: Terminal app; Windows: Command Prompt or PowerShell)
+  2. Navigate to the scripts folder, e.g.:
+       cd Desktop/ENG6813AIforCodeandDigitalHumanities/lincoln_corpus/scripts
+  3. Run:
+       python download_speeches.py
 
-The script reads corpus_index.csv, fetches each speech that is not yet
-in the corpus (in_corpus != 'yes'), and saves it as a .txt file.
+Speeches will be saved to the speeches/ folder one level up.
 """
 
 import csv
@@ -20,85 +22,130 @@ import os
 import re
 import time
 import argparse
+import urllib.request
+import urllib.error
 from pathlib import Path
+from html.parser import HTMLParser
 
-try:
-    import requests
-    from bs4 import BeautifulSoup
-except ImportError:
-    print("Install dependencies first:  pip install requests beautifulsoup4")
-    raise
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Site-specific scrapers
+# Minimal HTML text extractor (no third-party libraries needed)
 # ──────────────────────────────────────────────────────────────────────────────
 
-def scrape_ucsb(url: str, session: requests.Session) -> str | None:
-    """Fetch a speech from presidency.ucsb.edu."""
-    resp = session.get(url, headers=HEADERS, timeout=30)
-    if resp.status_code != 200:
-        return None
-    soup = BeautifulSoup(resp.text, "html.parser")
-    # The speech body lives in <div class="field-docs-content"> or
-    # <div class="field-item even">
-    for selector in [
-        "div.field-docs-content",
-        "div.field-item.even",
-        "div#transcript",
+class _TextExtractor(HTMLParser):
+    """Extract plain text from HTML, skipping scripts/styles/nav."""
+
+    SKIP_TAGS = {"script", "style", "nav", "header", "footer", "aside", "noscript"}
+
+    def __init__(self):
+        super().__init__()
+        self._skip_depth = 0
+        self._parts = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP_TAGS:
+            self._skip_depth += 1
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP_TAGS and self._skip_depth > 0:
+            self._skip_depth -= 1
+
+    def handle_data(self, data):
+        if self._skip_depth == 0:
+            self._parts.append(data)
+
+    def get_text(self):
+        raw = " ".join(self._parts)
+        # Collapse whitespace
+        raw = re.sub(r"\n{3,}", "\n\n", raw)
+        raw = re.sub(r"[ \t]+", " ", raw)
+        return raw.strip()
+
+
+def html_to_text(html: str) -> str:
+    p = _TextExtractor()
+    p.feed(html)
+    return p.get_text()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Target content extraction — pull the main speech body from each site
+# ──────────────────────────────────────────────────────────────────────────────
+
+def extract_ucsb(html: str) -> str:
+    """Pull speech body from presidency.ucsb.edu HTML."""
+    # The speech text lives between specific div markers
+    for pattern in [
+        r'class="field-docs-content"[^>]*>(.*?)</div>',
+        r'id="transcript"[^>]*>(.*?)</div>',
+        r'class="field-item even"[^>]*>(.*?)</div>',
     ]:
-        div = soup.select_one(selector)
-        if div:
-            return div.get_text(separator="\n").strip()
-    return None
+        m = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
+        if m:
+            return html_to_text(m.group(1))
+    # Fallback: strip all HTML
+    return html_to_text(html)
 
 
-def scrape_umich(url: str, session: requests.Session) -> str | None:
-    """Fetch a speech from quod.lib.umich.edu/l/lincoln."""
-    resp = session.get(url, headers=HEADERS, timeout=30)
-    if resp.status_code != 200:
-        return None
-    soup = BeautifulSoup(resp.text, "html.parser")
-    # Main text body
-    for selector in ["div#text", "div.text", "div.bodytext", "body"]:
-        div = soup.select_one(selector)
-        if div:
-            text = div.get_text(separator="\n").strip()
+def extract_umich(html: str) -> str:
+    """Pull speech body from quod.lib.umich.edu Lincoln pages."""
+    for pattern in [
+        r'<div[^>]+id="text"[^>]*>(.*?)</div>',
+        r'<div[^>]+class="[^"]*bodytext[^"]*"[^>]*>(.*?)</div>',
+    ]:
+        m = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
+        if m:
+            text = html_to_text(m.group(1))
             if len(text) > 200:
                 return text
-    return None
+    return html_to_text(html)
 
 
-def scrape_generic(url: str, session: requests.Session) -> str | None:
-    """Fallback: grab the largest text block on the page."""
-    resp = session.get(url, headers=HEADERS, timeout=30)
-    if resp.status_code != 200:
+def fetch_url(url: str) -> str | None:
+    """Fetch a URL and return the decoded HTML body, or None on failure."""
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+            # Try to detect encoding from headers or meta tag
+            charset = "utf-8"
+            ct = resp.headers.get("Content-Type", "")
+            m = re.search(r"charset=([\w-]+)", ct)
+            if m:
+                charset = m.group(1)
+            return raw.decode(charset, errors="replace")
+    except urllib.error.HTTPError as e:
+        print(f"HTTP {e.code}", end=" ")
         return None
-    soup = BeautifulSoup(resp.text, "html.parser")
-    for tag in soup(["script", "style", "nav", "header", "footer"]):
-        tag.decompose()
-    return soup.get_text(separator="\n").strip()
+    except Exception as e:
+        print(f"ERROR({e})", end=" ")
+        return None
 
 
-def fetch_speech(url: str, session: requests.Session) -> str | None:
+def fetch_speech(url: str) -> str | None:
     if not url:
         return None
+    html = fetch_url(url)
+    if not html:
+        return None
     if "presidency.ucsb.edu" in url:
-        return scrape_ucsb(url, session)
+        return extract_ucsb(html)
     if "quod.lib.umich.edu" in url:
-        return scrape_umich(url, session)
-    return scrape_generic(url, session)
+        return extract_umich(html)
+    return html_to_text(html)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Filename helpers
+# Helpers
 # ──────────────────────────────────────────────────────────────────────────────
 
 def slugify(text: str) -> str:
@@ -109,8 +156,8 @@ def slugify(text: str) -> str:
 
 
 def make_filename(row: dict) -> str:
-    date = row["date"] or "0000-00-00"
-    slug = slugify(row["title"])
+    date = row.get("date") or "0000-00-00"
+    slug = slugify(row.get("title", "untitled"))
     return f"{date}_{slug}.txt"
 
 
@@ -119,24 +166,39 @@ def make_filename(row: dict) -> str:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Download Lincoln corpus speeches")
-    parser.add_argument("--output", default="../speeches", help="Output directory for .txt files")
-    parser.add_argument("--delay", type=float, default=2.0, help="Seconds between requests")
-    parser.add_argument("--index", default="../metadata/corpus_index.csv", help="Path to corpus_index.csv")
-    parser.add_argument("--skip-existing", action="store_true", default=True)
+    parser = argparse.ArgumentParser(
+        description="Download Lincoln corpus speeches — no extra installs needed"
+    )
+    parser.add_argument(
+        "--output", default="../speeches",
+        help="Folder to save .txt files (default: ../speeches)"
+    )
+    parser.add_argument(
+        "--delay", type=float, default=2.0,
+        help="Seconds to wait between requests (default: 2)"
+    )
+    parser.add_argument(
+        "--index", default="../metadata/corpus_index.csv",
+        help="Path to corpus_index.csv"
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.output).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     index_path = Path(args.index).resolve()
 
+    if not index_path.exists():
+        print(f"Cannot find index file at: {index_path}")
+        print("Make sure you are running this from the scripts/ folder.")
+        return
+
     with open(index_path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
-    session = requests.Session()
-    downloaded = 0
-    skipped = 0
-    failed = []
+    print(f"Index loaded: {len(rows)} speeches")
+    print(f"Output folder: {out_dir}\n")
+
+    downloaded, skipped, failed = 0, 0, []
 
     for row in rows:
         speech_id = row["id"]
@@ -151,34 +213,28 @@ def main():
         filename = row.get("filename") or make_filename(row)
         dest = out_dir / filename
 
-        if args.skip_existing and dest.exists():
-            print(f"  [skip]  {filename}")
+        if dest.exists():
+            print(f"  [exists] {filename}")
             skipped += 1
             continue
 
         if not url:
-            print(f"  [no url] {speech_id}: {title}")
+            print(f"  [no url] {speech_id}: {title[:55]}")
             failed.append((speech_id, title, "no source URL"))
             continue
 
-        print(f"  [{speech_id}] {title[:60]}...", end=" ", flush=True)
-        try:
-            text = fetch_speech(url, session)
-        except Exception as exc:
-            print(f"ERROR: {exc}")
-            failed.append((speech_id, title, str(exc)))
-            time.sleep(args.delay)
-            continue
+        print(f"  [{speech_id}] {title[:55]}...", end=" ", flush=True)
+        text = fetch_speech(url)
 
         if not text or len(text) < 100:
-            print("EMPTY/SHORT — skipping")
+            print("empty/short — skipping")
             failed.append((speech_id, title, "empty or too short"))
             time.sleep(args.delay)
             continue
 
         header = (
             f"TITLE: {title}\n"
-            f"DATE: {row['date']}\n"
+            f"DATE: {row.get('date', '')}\n"
             f"LOCATION: {row.get('location', '')}\n"
             f"TYPE: {row.get('type', '')}\n"
             f"TOPICS: {row.get('topics', '')}\n"
@@ -191,9 +247,9 @@ def main():
         downloaded += 1
         time.sleep(args.delay)
 
-    print(f"\n{'─'*50}")
+    print(f"\n{'─' * 50}")
     print(f"Downloaded : {downloaded}")
-    print(f"Skipped    : {skipped}")
+    print(f"Skipped    : {skipped}  (already in corpus)")
     print(f"Failed     : {len(failed)}")
     if failed:
         print("\nFailed items:")

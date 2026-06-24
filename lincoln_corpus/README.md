@@ -77,9 +77,11 @@ environment):
 
 ```bash
 cd lincoln_corpus/scripts
-pip install requests beautifulsoup4
 python download_speeches.py
 ```
+
+No third-party packages required — the script uses only Python's built-in
+standard library (`urllib`, `html.parser`, `csv`, `re`).
 
 The script reads `metadata/corpus_index.csv`, fetches each speech not yet
 in the corpus from the UCSB American Presidency Project or the University of
