@@ -91,14 +91,15 @@ ALINC = {
 }
 
 # Gutenberg 7-volume plain-text URLs (Lapsley edition, public domain)
+# Vols 2-7 use the /cache/epub/ path; vol 1 uses /files/
 GUTENBERG_VOLS = [
-    "https://www.gutenberg.org/files/2653/2653-0.txt",  # Vol 1: 1832–1843
-    "https://www.gutenberg.org/files/2654/2654-0.txt",  # Vol 2: 1843–1858
-    "https://www.gutenberg.org/files/2655/2655-0.txt",  # Vol 3: 1858
-    "https://www.gutenberg.org/files/2656/2656-0.txt",  # Vol 4: 1858–1860
-    "https://www.gutenberg.org/files/2657/2657-0.txt",  # Vol 5: 1858–1862
-    "https://www.gutenberg.org/files/2658/2658-0.txt",  # Vol 6: 1862–1863
-    "https://www.gutenberg.org/files/2659/2659-0.txt",  # Vol 7: 1863–1865
+    "https://www.gutenberg.org/files/2653/2653-0.txt",          # Vol 1: 1832–1843
+    "https://www.gutenberg.org/cache/epub/2654/pg2654.txt",     # Vol 2: 1843–1858
+    "https://www.gutenberg.org/cache/epub/2655/pg2655.txt",     # Vol 3: 1858
+    "https://www.gutenberg.org/cache/epub/2656/pg2656.txt",     # Vol 4: 1858–1860
+    "https://www.gutenberg.org/cache/epub/2657/pg2657.txt",     # Vol 5: 1858–1862
+    "https://www.gutenberg.org/cache/epub/2658/pg2658.txt",     # Vol 6: 1862–1863
+    "https://www.gutenberg.org/cache/epub/2659/pg2659.txt",     # Vol 7: 1863–1865
 ]
 
 HEADERS = {"User-Agent": "Lincoln-Corpus-Builder/1.0 (academic research)"}
