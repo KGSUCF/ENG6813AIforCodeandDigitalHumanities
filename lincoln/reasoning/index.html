@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln's Reasoning: Argumentation Over Time</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #252836;
+  --border: #2e3148;
+  --text: #e8e9f0;
+  --muted: #8b8fa8;
+  --accent: #c9a84c;
+  --accent-light: #f0c96a;
+  --pre: #4a9eff;
+  --war: #ff6b4a;
+  --post: #4aff9e;
+
+  --c-moral: #ff9d6a;
+  --c-legal: #80d4ff;
+  --c-historical: #c97aff;
+  --c-pragmatic: #ffcc44;
+  --c-deductive: #4aff9e;
+  --c-analogical: #ff6b9d;
+  --c-inductive: #a8ff78;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 1.8rem 2rem 1.2rem;
+}
+header h1 { font-size: 1.5rem; color: var(--accent-light); margin-bottom: 0.3rem; }
+header p { color: var(--muted); font-size: 0.88rem; font-family: sans-serif; }
+nav.bc { font-family: sans-serif; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+nav.bc a { color: var(--accent); text-decoration: none; }
+
+.tabs {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border); padding: 0 1.5rem; gap: 0.2rem;
+}
+.tab {
+  font-family: sans-serif; font-size: 0.82rem; padding: 0.7rem 1.2rem;
+  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+
+.panel { display: none; padding: 1.5rem 2rem 3rem; max-width: 1200px; }
+.panel.active { display: block; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.2rem; margin-bottom: 1.2rem;
+}
+.card h3 {
+  font-family: sans-serif; font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted); margin-bottom: 1rem;
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 1.2rem; }
+.legend-item { display: flex; align-items: center; gap: 0.35rem; font-family: sans-serif; font-size: 0.75rem; color: var(--muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.bar-label { font-family: sans-serif; font-size: 0.75rem; color: var(--text); width: 120px; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--border); height: 10px; border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-num { font-family: sans-serif; font-size: 0.72rem; color: var(--muted); width: 36px; text-align: right; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+.insight {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0;
+  padding: 0.9rem 1.1rem; margin-top: 1rem;
+  font-family: sans-serif; font-size: 0.82rem; line-height: 1.65; color: var(--text);
+}
+.insight strong { color: var(--accent-light); }
+
+canvas { display: block; }
+
+.era-badge { display: inline-block; padding: 1px 6px; border-radius: 10px; font-size: 0.68rem; font-family: sans-serif; }
+.eb-pre { background: rgba(74,158,255,.15); color: var(--pre); border: 1px solid var(--pre); }
+.eb-war { background: rgba(255,107,74,.15); color: var(--war); border: 1px solid var(--war); }
+.eb-post { background: rgba(74,255,158,.15); color: var(--post); border: 1px solid var(--post); }
+
+/* speech browser */
+.browser-layout { display: flex; gap: 1.2rem; }
+.speech-list { width: 260px; flex-shrink: 0; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.si { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.si:hover { background: var(--surface2); }
+.si.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+.si-title { font-family: sans-serif; font-size: 0.78rem; color: var(--text); }
+.si-date { font-family: sans-serif; font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.si-dom { font-family: sans-serif; font-size: 0.68rem; margin-top: 2px; }
+
+.detail-panel { flex: 1; }
+
+/* stacked bar */
+.stacked-row { display: flex; height: 22px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem; }
+.stacked-seg { height: 100%; transition: width 0.3s; }
+.stacked-label { font-family: sans-serif; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.3rem; }
+
+/* argument arc */
+.arc-container { position: relative; }
+
+#tooltip {
+  position: fixed; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 5px; padding: 0.7rem 0.9rem; pointer-events: none;
+  z-index: 1000; display: none; font-family: sans-serif; font-size: 0.78rem;
+  max-width: 260px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+#tooltip h4 { color: var(--accent-light); font-family: Georgia; font-size: 0.82rem; margin-bottom: 0.3rem; }
+#tooltip .ttm { color: var(--muted); font-size: 0.72rem; }
+
+.search-bar {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.45rem 0.7rem; color: var(--text);
+  font-family: sans-serif; font-size: 0.8rem; outline: none; margin-bottom: 0.4rem;
+}
+.search-bar:focus { border-color: var(--accent); }
+
+.method-note {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
+  padding: 1rem 1.2rem; margin-top: 2rem;
+  font-family: sans-serif; font-size: 0.82rem; line-height: 1.65; color: var(--muted);
+}
+.method-note strong { color: var(--accent-light); }
+
+.reasoning-key {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.7rem; margin-bottom: 1.2rem;
+}
+.rk-item {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 5px;
+  padding: 0.7rem 0.9rem; display: flex; gap: 0.7rem; align-items: flex-start;
+}
+.rk-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+.rk-name { font-family: sans-serif; font-size: 0.78rem; color: var(--text); margin-bottom: 0.2rem; }
+.rk-desc { font-family: sans-serif; font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="bc"><a href="../../index.html">Lincoln Project</a> &rsaquo; Argumentation &amp; Reasoning</nav>
+  <h1>Lincoln's Reasoning: Argumentation Over Time</h1>
+  <p>How Lincoln's modes of argument shifted across 125 speeches from 1832 to 1865</p>
+</header>
+
+<div id="tooltip"></div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">Reasoning Over Time</div>
+  <div class="tab" data-tab="compare">Era Comparison</div>
+  <div class="tab" data-tab="browser">Speech Browser</div>
+</div>
+
+<!-- TAB 1: TIMELINE OF REASONING -->
+<div class="panel active" id="panel-overview">
+
+  <div class="legend" id="main-legend"></div>
+
+  <div class="card">
+    <h3>Reasoning Types Across the Corpus &mdash; Each Speech as a Stacked Bar</h3>
+    <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-bottom:0.8rem">
+      Speeches ordered by date. Bar segments show the relative proportion of each reasoning type detected in that speech. Hover for details.
+    </p>
+    <canvas id="stream-canvas"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Moral vs. Legal Reasoning &mdash; Rolling Average Across Career</h3>
+    <canvas id="moral-legal-canvas" height="160"></canvas>
+    <div class="insight">
+      <strong>The central finding:</strong> Moral reasoning dominates throughout Lincoln's career, but its
+      lead over legal reasoning <em>widens</em> during the war years. This is counterintuitive &mdash; one
+      might expect a wartime president to lean more heavily on constitutional and legal justification.
+      Instead, Lincoln increasingly argued from moral first principles, particularly after the Emancipation
+      Proclamation. The legal case for emancipation was contested; the moral case was not.
+      By the Second Inaugural, legal reasoning has almost vanished entirely.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Pragmatic Reasoning Over Time</h3>
+    <canvas id="pragmatic-canvas" height="120"></canvas>
+    <div class="insight">
+      <strong>War demands practical argument:</strong> Pragmatic reasoning &mdash; arguments from
+      necessity, consequence, and policy effect &mdash; rises sharply during the wartime period.
+      This reflects the changed demands on Lincoln as president: he was no longer debating abstract
+      principles with Douglas but justifying specific decisions (military conscription, suspension of
+      habeas corpus, emancipation as a war measure) to skeptical audiences. The arguments had to be
+      about what would <em>work</em>, not only what was right.
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB 2: ERA COMPARISON -->
+<div class="panel" id="panel-compare">
+
+  <div class="reasoning-key" id="reasoning-key"></div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Pre-War Average (54 speeches, 1832&ndash;1860)</h3>
+      <div id="era-bars-pre"></div>
+    </div>
+    <div class="card">
+      <h3>Wartime Average (70 speeches, 1861&ndash;1865)</h3>
+      <div id="era-bars-war"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>The Shift in Lincoln's Argument Strategy</h3>
+    <canvas id="shift-canvas" height="220"></canvas>
+    <div class="insight">
+      <strong>What changed — and what didn't:</strong> The most significant shift between Lincoln's
+      pre-war and wartime reasoning is the rise of <strong style="color:var(--c-pragmatic)">pragmatic</strong>
+      argument (+13%) and the relative decline of <strong style="color:var(--c-analogical)">analogical</strong>
+      reasoning (&minus;33%). Pre-war Lincoln argued by comparison and metaphor &mdash; the house divided,
+      the machinery of slavery, the framed timbers of a conspiracy. Wartime Lincoln argued from necessity
+      and effect. The poetic mode gave way to the executive one.
+    </div>
+    <div class="insight" style="margin-top:0.8rem">
+      <strong>What stayed constant:</strong> <strong style="color:var(--c-moral)">Moral</strong> and
+      <strong style="color:var(--c-legal)">legal</strong> reasoning hold nearly steady across the eras.
+      Lincoln never abandoned the constitutional frame, even as he pushed it to its limits. And he never
+      stopped making the moral argument, even when political prudence might have counseled silence on it.
+      This consistency is itself a rhetorical strategy: it made him harder to characterize as either a
+      radical (pure moralist) or an opportunist (pure pragmatist).
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Five Speeches That Show the Shift</h3>
+    <div id="five-speeches"></div>
+  </div>
+
+</div>
+
+<!-- TAB 3: BROWSER -->
+<div class="panel" id="panel-browser">
+  <div class="browser-layout">
+    <div>
+      <input class="search-bar" id="rsearch" placeholder="Search speeches..." />
+      <div class="speech-list" id="r-speech-list"></div>
+    </div>
+    <div class="detail-panel" id="r-detail">
+      <p style="color:var(--muted);font-family:sans-serif;font-size:0.85rem;padding-top:1rem">
+        Select a speech to see its reasoning profile.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const RTYPES = ["moral","legal","historical","pragmatic","deductive","analogical","inductive"];
+const RCOLORS = {
+  moral: "#ff9d6a", legal: "#80d4ff", historical: "#c97aff",
+  pragmatic: "#ffcc44", deductive: "#4aff9e", analogical: "#ff6b9d", inductive: "#a8ff78"
+};
+const RDESC = {
+  moral: "Appeals to right/wrong, justice, duty, conscience, and divine authority",
+  legal: "Arguments grounded in the Constitution, law, precedent, and jurisdiction",
+  historical: "Appeals to the Founders, 1776, and the precedent of the past",
+  pragmatic: "Arguments from necessity, consequence, policy effect, and practical interest",
+  deductive: "If-then logic, 'therefore,' and formal logical connectors",
+  analogical: "Comparisons, metaphors, and 'just as' reasoning by similarity",
+  inductive: "Reasoning from specific examples toward general conclusions",
+};
+
+const ERA_COLORS = { "pre-war": "#4a9eff", "wartime": "#ff6b4a", "post-war": "#4aff9e" };
+
+let data = [];
+
+async function init() {
+  const resp = await fetch("../data/reasoning.json");
+  data = await resp.json();
+  buildLegend();
+  buildReasoningKey();
+  buildStreamChart();
+  buildMoralLegal();
+  buildPragmatic();
+  buildEraComparison();
+  buildShiftChart();
+  buildFiveSpeeches();
+  buildBrowser();
+  setupTabs();
+}
+
+function buildLegend() {
+  const el = document.getElementById("main-legend");
+  RTYPES.forEach(r => {
+    el.innerHTML += `<div class="legend-item">
+      <div class="legend-dot" style="background:${RCOLORS[r]}"></div>${r}
+    </div>`;
+  });
+}
+
+function buildReasoningKey() {
+  const el = document.getElementById("reasoning-key");
+  RTYPES.forEach(r => {
+    el.innerHTML += `<div class="rk-item">
+      <div class="rk-dot" style="background:${RCOLORS[r]}"></div>
+      <div><div class="rk-name" style="color:${RCOLORS[r]}">${r.charAt(0).toUpperCase()+r.slice(1)}</div>
+      <div class="rk-desc">${RDESC[r]}</div></div>
+    </div>`;
+  });
+}
+
+function buildStreamChart() {
+  const canvas = document.getElementById("stream-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 200;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const sorted = [...data].sort((a,b) => a.date.localeCompare(b.date));
+  const barW = Math.max(2, Math.floor((W - 20) / sorted.length) - 1);
+  const pad = { left: 10, top: 10, bottom: 30 };
+  const plotH = H - pad.top - pad.bottom;
+
+  const tt = document.getElementById("tooltip");
+
+  sorted.forEach((s, i) => {
+    const x = pad.left + i * (barW + 1);
+    const rsum = RTYPES.reduce((a,b) => a + (s.reasoning[b]||0), 0);
+    if (rsum === 0) return;
+    let y = pad.top;
+    RTYPES.forEach(r => {
+      const h = ((s.reasoning[r]||0) / rsum) * plotH;
+      ctx.fillStyle = RCOLORS[r];
+      ctx.fillRect(x, y, barW, h);
+      y += h;
+    });
+  });
+
+  // Era dividers
+  const minDate = new Date("1831-06-01").getTime();
+  const maxDate = new Date("1866-01-01").getTime();
+  const warStart = new Date("1861-01-01").getTime();
+
+  function xForDate(d) {
+    const t = new Date(d).getTime();
+    return pad.left + ((t - minDate)/(maxDate - minDate)) * (W - 20);
+  }
+
+  ctx.strokeStyle = "#ffffff33"; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  const wx = xForDate("1861-01-01");
+  ctx.beginPath(); ctx.moveTo(wx, pad.top); ctx.lineTo(wx, H - pad.bottom); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#4a9eff88"; ctx.font = "10px sans-serif"; ctx.textAlign = "left";
+  ctx.fillText("Pre-War", pad.left + 4, H - 8);
+  ctx.fillStyle = "#ff6b4a88";
+  ctx.fillText("Wartime →", wx + 4, H - 8);
+
+  // Year labels
+  for (let y = 1835; y <= 1865; y += 5) {
+    const lx = xForDate(`${y}-01-01`);
+    ctx.fillStyle = "#8b8fa8"; ctx.textAlign = "center";
+    ctx.fillText(y, lx, H - 2);
+  }
+
+  // Tooltip
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left - pad.left;
+    const idx = Math.floor(mx / (barW + 1));
+    if (idx >= 0 && idx < sorted.length) {
+      const s = sorted[idx];
+      const eraClass = s.era === "pre-war" ? "eb-pre" : s.era === "wartime" ? "eb-war" : "eb-post";
+      const topType = RTYPES.reduce((a,b) => (s.reasoning[a]||0) > (s.reasoning[b]||0) ? a : b);
+      tt.innerHTML = `<h4>${s.title}</h4>
+        <div class="ttm">${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span></div>
+        <div class="ttm" style="margin-top:4px">Dominant: <strong style="color:${RCOLORS[topType]}">${topType}</strong></div>
+        <div class="ttm">${RTYPES.map(r => `${r}: ${s.reasoning[r]}`).join(" &bull; ")}</div>`;
+      tt.style.display = "block";
+      let tx = e.clientX + 14, ty = e.clientY + 14;
+      if (tx + 270 > window.innerWidth) tx = e.clientX - 280;
+      if (ty + 140 > window.innerHeight) ty = e.clientY - 120;
+      tt.style.left = tx+"px"; tt.style.top = ty+"px";
+    }
+  });
+  canvas.addEventListener("mouseleave", () => { tt.style.display = "none"; });
+}
+
+function rollingAvg(arr, values, window=7) {
+  return arr.map((_, i) => {
+    const slice = values.slice(Math.max(0,i-window), i+window+1);
+    return slice.reduce((a,b)=>a+b,0)/slice.length;
+  });
+}
+
+function buildMoralLegal() {
+  const canvas = document.getElementById("moral-legal-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 160; canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const pad = {left:30,top:10,right:10,bottom:24};
+  const pw = W-pad.left-pad.right, ph = H-pad.top-pad.bottom;
+
+  const morals = sorted.map(s=>s.reasoning.moral||0);
+  const legals = sorted.map(s=>s.reasoning.legal||0);
+  const mAvg = rollingAvg(sorted, morals, 6);
+  const lAvg = rollingAvg(sorted, legals, 6);
+  const maxV = Math.max(...mAvg, ...lAvg) * 1.1;
+
+  function px(i) { return pad.left + (i/sorted.length)*pw; }
+  function py(v) { return pad.top + ph - (v/maxV)*ph; }
+
+  // Grid
+  ctx.strokeStyle="#2e3148"; ctx.lineWidth=1;
+  [0,2,4,6,8].forEach(v => {
+    const y = py(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+pw,y); ctx.stroke();
+    ctx.fillStyle="#8b8fa8"; ctx.font="9px sans-serif"; ctx.textAlign="right";
+    ctx.fillText(v, pad.left-3, y+3);
+  });
+
+  // War divider
+  const warIdx = sorted.findIndex(s => s.date >= "1861-01-01");
+  if (warIdx > 0) {
+    const wx = px(warIdx);
+    ctx.strokeStyle="#ffffff22"; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(wx,pad.top); ctx.lineTo(wx,pad.top+ph); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Lines
+  const drawLine = (avgs, color) => {
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+    avgs.forEach((v,i) => i===0 ? ctx.moveTo(px(i),py(v)) : ctx.lineTo(px(i),py(v)));
+    ctx.stroke();
+  };
+  drawLine(mAvg, RCOLORS.moral);
+  drawLine(lAvg, RCOLORS.legal);
+
+  // Year labels
+  ctx.fillStyle="#8b8fa8"; ctx.font="10px sans-serif"; ctx.textAlign="center";
+  for (let y=1835;y<=1865;y+=5) {
+    const idx = sorted.findIndex(s=>s.date>=`${y}-01-01`);
+    if (idx>=0) ctx.fillText(y, px(idx), H-4);
+  }
+
+  // Legend
+  ctx.fillStyle=RCOLORS.moral; ctx.fillRect(W-120,10,12,12);
+  ctx.fillStyle="#ccc"; ctx.font="11px sans-serif"; ctx.textAlign="left"; ctx.fillText("Moral",W-104,21);
+  ctx.fillStyle=RCOLORS.legal; ctx.fillRect(W-120,28,12,12);
+  ctx.fillText("Legal",W-104,39);
+}
+
+function buildPragmatic() {
+  const canvas = document.getElementById("pragmatic-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 120; canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const pad={left:30,top:8,right:10,bottom:20};
+  const pw=W-pad.left-pad.right, ph=H-pad.top-pad.bottom;
+
+  const prags = sorted.map(s=>s.reasoning.pragmatic||0);
+  const pAvg = rollingAvg(sorted, prags, 6);
+  const maxV = Math.max(...pAvg)*1.15;
+
+  function px(i){return pad.left+(i/sorted.length)*pw;}
+  function py(v){return pad.top+ph-(v/maxV)*ph;}
+
+  ctx.strokeStyle="#2e3148"; ctx.lineWidth=1;
+  [0,1,2,3,4].forEach(v=>{
+    const y=py(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+pw,y); ctx.stroke();
+    ctx.fillStyle="#8b8fa8"; ctx.font="9px sans-serif"; ctx.textAlign="right";
+    ctx.fillText(v,pad.left-3,y+3);
+  });
+
+  const warIdx=sorted.findIndex(s=>s.date>="1861-01-01");
+  if(warIdx>0){
+    ctx.strokeStyle="#ffffff22"; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(px(warIdx),pad.top); ctx.lineTo(px(warIdx),pad.top+ph); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Fill area under pragmatic line
+  ctx.beginPath(); ctx.moveTo(px(0),py(0));
+  pAvg.forEach((v,i)=>ctx.lineTo(px(i),py(v)));
+  ctx.lineTo(px(pAvg.length-1),py(0)); ctx.closePath();
+  ctx.fillStyle=RCOLORS.pragmatic+"44"; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle=RCOLORS.pragmatic; ctx.lineWidth=2;
+  pAvg.forEach((v,i)=>i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)));
+  ctx.stroke();
+
+  ctx.fillStyle="#8b8fa8"; ctx.font="10px sans-serif"; ctx.textAlign="center";
+  for(let y=1835;y<=1865;y+=5){
+    const idx=sorted.findIndex(s=>s.date>=`${y}-01-01`);
+    if(idx>=0) ctx.fillText(y,px(idx),H-2);
+  }
+  ctx.fillStyle=RCOLORS.pragmatic; ctx.fillRect(W-120,8,12,12);
+  ctx.fillStyle="#ccc"; ctx.font="11px sans-serif"; ctx.textAlign="left"; ctx.fillText("Pragmatic",W-104,19);
+}
+
+function buildEraComparison() {
+  const byEra = {};
+  data.forEach(s => {
+    if (!byEra[s.era]) byEra[s.era] = [];
+    byEra[s.era].push(s);
+  });
+
+  const maxVal = {};
+  RTYPES.forEach(r => {
+    maxVal[r] = Math.max(
+      ...["pre-war","wartime"].map(e => byEra[e] ? byEra[e].reduce((a,s)=>a+(s.reasoning[r]||0),0)/byEra[e].length : 0)
+    );
+  });
+
+  ["pre","war"].forEach(era => {
+    const eraKey = era === "pre" ? "pre-war" : "wartime";
+    const group = byEra[eraKey] || [];
+    const el = document.getElementById(`era-bars-${era}`);
+    RTYPES.forEach(r => {
+      const avg = group.reduce((a,s)=>a+(s.reasoning[r]||0),0)/Math.max(group.length,1);
+      const pct = maxVal[r] > 0 ? (avg/maxVal[r]*100).toFixed(1) : 0;
+      el.innerHTML += `<div class="bar-row">
+        <div class="bar-label" style="color:${RCOLORS[r]}">${r}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${RCOLORS[r]}"></div></div>
+        <div class="bar-num">${avg.toFixed(2)}</div>
+      </div>`;
+    });
+  });
+}
+
+function buildShiftChart() {
+  const canvas = document.getElementById("shift-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 220; canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const byEra = {};
+  data.forEach(s => {
+    if (!byEra[s.era]) byEra[s.era] = [];
+    byEra[s.era].push(s);
+  });
+
+  const preAvg = {}, warAvg = {};
+  RTYPES.forEach(r => {
+    const pre = byEra["pre-war"] || [];
+    const war = byEra["wartime"] || [];
+    preAvg[r] = pre.reduce((a,s)=>a+(s.reasoning[r]||0),0)/Math.max(pre.length,1);
+    warAvg[r] = war.reduce((a,s)=>a+(s.reasoning[r]||0),0)/Math.max(war.length,1);
+  });
+
+  const maxVal = Math.max(...RTYPES.map(r => Math.max(preAvg[r], warAvg[r])));
+  const pad={left:110,top:20,right:80,bottom:20};
+  const pw=W-pad.left-pad.right;
+  const rowH = (H-pad.top-pad.bottom)/RTYPES.length;
+
+  RTYPES.forEach((r,i) => {
+    const y = pad.top + i*rowH + rowH/2;
+    const preX = pad.left + (preAvg[r]/maxVal)*pw;
+    const warX = pad.left + (warAvg[r]/maxVal)*pw;
+
+    // Label
+    ctx.fillStyle=RCOLORS[r]; ctx.font="bold 11px sans-serif"; ctx.textAlign="right";
+    ctx.fillText(r, pad.left-8, y+4);
+
+    // Connecting line
+    ctx.strokeStyle="#2e3148"; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+pw,y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Pre-war dot
+    ctx.beginPath(); ctx.arc(preX,y,6,0,Math.PI*2);
+    ctx.fillStyle=ERA_COLORS["pre-war"]+"cc"; ctx.fill();
+    ctx.strokeStyle=ERA_COLORS["pre-war"]; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Wartime dot
+    ctx.beginPath(); ctx.arc(warX,y,6,0,Math.PI*2);
+    ctx.fillStyle=ERA_COLORS["wartime"]+"cc"; ctx.fill();
+    ctx.strokeStyle=ERA_COLORS["wartime"]; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Arrow between
+    ctx.strokeStyle = warX > preX ? "#4aff9e" : "#ff4a6b";
+    ctx.lineWidth=1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(preX,y); ctx.lineTo(warX,y); ctx.stroke();
+  });
+
+  // Legend
+  ctx.fillStyle=ERA_COLORS["pre-war"]; ctx.beginPath(); ctx.arc(W-70,12,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#ccc"; ctx.font="10px sans-serif"; ctx.textAlign="left"; ctx.fillText("Pre-War",W-60,16);
+  ctx.fillStyle=ERA_COLORS["wartime"]; ctx.beginPath(); ctx.arc(W-70,30,6,0,Math.PI*2); ctx.fill();
+  ctx.fillText("Wartime",W-60,34);
+  ctx.fillStyle="#4aff9e"; ctx.fillRect(W-70,46,20,3);
+  ctx.fillStyle="#ccc"; ctx.fillText("increased",W-46,50);
+  ctx.fillStyle="#ff4a6b"; ctx.fillRect(W-70,58,20,3);
+  ctx.fillText("decreased",W-46,62);
+}
+
+function buildFiveSpeeches() {
+  const spotlights = [
+    { id: "1854-10-16_at-peoria-illinois", note: "Peak of historical + legal reasoning: Lincoln traces slavery policy back to the Northwest Ordinance of 1787, building a 3-hour legal-historical case against Douglas." },
+    { id: "1858-06-16_a-house-divided-speech", note: "High analogical reasoning: the house, the machinery, the framed timbers — Lincoln argues by sustained metaphor, making the abstract conspiracy visible." },
+    { id: "1860-02-27_cooper-union-address", note: "Maximum logos/legal mode: 34 Founders cited by vote record. Lincoln proves himself a legal scholar to a New York audience that expected it." },
+    { id: "1862-09-22_preliminary-emancipation-proclamation", note: "Shift to pragmatic: emancipation justified as a war measure, a military necessity — not primarily a moral statement, despite Lincoln's private views." },
+    { id: "1865-03-04_second-inaugural-address", note: "Dominant moral-theological reasoning: legal argument nearly absent. Lincoln argues from providence, shared guilt, and divine justice — the most philosophically ambitious reasoning in the corpus." },
+  ];
+
+  const el = document.getElementById("five-speeches");
+  spotlights.forEach(sp => {
+    const s = data.find(d => d.id === sp.id);
+    if (!s) return;
+    const eraClass = s.era==="pre-war"?"eb-pre":"eb-war";
+    const topTypes = RTYPES.sort((a,b)=>(s.reasoning[b]||0)-(s.reasoning[a]||0)).slice(0,3);
+    el.innerHTML += `<div style="border-bottom:1px solid var(--border);padding:0.9rem 0;display:flex;gap:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <div style="font-family:sans-serif;font-size:0.82rem;color:var(--accent-light);margin-bottom:2px">${s.title}</div>
+        <div style="font-family:sans-serif;font-size:0.72rem;color:var(--muted);margin-bottom:6px">
+          ${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span></div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${topTypes.map(r=>`<span style="font-family:sans-serif;font-size:0.68rem;padding:1px 7px;border-radius:10px;background:${RCOLORS[r]}22;color:${RCOLORS[r]};border:1px solid ${RCOLORS[r]}">${r}</span>`).join("")}
+        </div>
+      </div>
+      <div style="flex:2;min-width:220px;font-family:sans-serif;font-size:0.8rem;color:var(--muted);line-height:1.55">${sp.note}</div>
+    </div>`;
+  });
+}
+
+function buildBrowser() {
+  const list = document.getElementById("r-speech-list");
+  const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
+
+  const populate = (items) => {
+    list.innerHTML = "";
+    items.forEach(s => {
+      const topType = RTYPES.reduce((a,b)=>(s.reasoning[a]||0)>(s.reasoning[b]||0)?a:b);
+      const div = document.createElement("div");
+      div.className="si"; div.dataset.id=s.id;
+      div.innerHTML=`<div class="si-title">${s.title}</div>
+        <div class="si-date">${s.displayDate}</div>
+        <div class="si-dom" style="color:${RCOLORS[topType]}">&#9679; ${topType}</div>`;
+      div.addEventListener("click",()=>{ document.querySelectorAll(".si").forEach(x=>x.classList.remove("active")); div.classList.add("active"); showDetail(s); });
+      list.appendChild(div);
+    });
+  };
+
+  populate(sorted);
+
+  document.getElementById("rsearch").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    populate(sorted.filter(s=>s.title.toLowerCase().includes(q)||s.displayDate.toLowerCase().includes(q)));
+  });
+}
+
+function showDetail(s) {
+  const el = document.getElementById("r-detail");
+  const eraClass = s.era==="pre-war"?"eb-pre":s.era==="wartime"?"eb-war":"eb-post";
+  const sorted_types = [...RTYPES].sort((a,b)=>(s.reasoning[b]||0)-(s.reasoning[a]||0));
+  const maxR = Math.max(...RTYPES.map(r=>s.reasoning[r]||0));
+
+  const stackTotal = RTYPES.reduce((a,r)=>a+(s.reasoning[r]||0),0);
+
+  el.innerHTML = `
+    <div class="card">
+      <h3 style="color:var(--accent-light);font-size:0.9rem;text-transform:none;letter-spacing:0;margin-bottom:0.3rem">${s.title}</h3>
+      <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-bottom:1rem">
+        ${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span>
+        &bull; ${s.audience} &bull; ${s.wordCount.toLocaleString()} words</p>
+
+      <div class="stacked-label">Reasoning type proportion</div>
+      <div class="stacked-row">
+        ${RTYPES.map(r=>`<div class="stacked-seg" style="width:${stackTotal>0?((s.reasoning[r]||0)/stackTotal*100).toFixed(1):0}%;background:${RCOLORS[r]}" title="${r}"></div>`).join("")}
+      </div>
+
+      <div style="margin-top:0.8rem">
+        ${sorted_types.map(r=>`<div class="bar-row">
+          <div class="bar-label" style="color:${RCOLORS[r]};width:90px">${r}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${maxR>0?((s.reasoning[r]||0)/maxR*100).toFixed(1):0}%;background:${RCOLORS[r]}"></div></div>
+          <div class="bar-num">${(s.reasoning[r]||0).toFixed(2)}</div>
+        </div>`).join("")}
+      </div>
+
+      <div style="margin-top:1rem;font-family:sans-serif;font-size:0.78rem;color:var(--muted)">
+        <strong style="color:var(--text)">Argument structure</strong><br>
+        Claim sentences: ${s.structure.claimRate}% &bull;
+        Evidence sentences: ${s.structure.evidenceRate}% &bull;
+        Rebuttal sentences: ${s.structure.rebuttalRate}%
+      </div>
+
+      <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-top:0.8rem;font-style:italic;line-height:1.5">
+        &ldquo;${s.textPreview}&hellip;&rdquo;</p>
+    </div>`;
+}
+
+function setupTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click",()=>{
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+      t.classList.add("active");
+      document.getElementById("panel-"+t.dataset.tab).classList.add("active");
+    });
+  });
+}
+
+init();
+</script>
+
+<div class="method-note" style="margin:0 2rem 3rem">
+  <strong>Methodological Note</strong><br>
+  Reasoning types were scored by counting indicator words and phrases in each speech text: moral reasoning
+  by terms like &ldquo;right,&rdquo; &ldquo;wrong,&rdquo; &ldquo;duty,&rdquo; and &ldquo;conscience;&rdquo;
+  legal reasoning by references to the Constitution, law, and jurisdiction; historical reasoning by
+  references to the Founders and the founding period; pragmatic reasoning by terms of necessity,
+  consequence, and policy; and so on. All scores are normalized per 1,000 words to allow comparison across
+  speeches of very different lengths. The rolling averages on the timeline charts use a window of six
+  speeches on each side to smooth short-term variation. These scores identify the presence of reasoning
+  types, not their quality or persuasive success &mdash; a speech high in &ldquo;moral&rdquo; language
+  may be making a powerful philosophical argument or simply invoking God as a rhetorical prop. The five
+  spotlight speeches in the Era Comparison tab were selected to illustrate the arc of Lincoln's
+  argumentative development across his career.
+</div>
+</body>
+</html>
