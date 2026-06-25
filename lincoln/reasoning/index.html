@@ -221,7 +221,7 @@ canvas { display: block; }
 
   <div class="card">
     <h3>The Shift in Lincoln's Argument Strategy</h3>
-    <canvas id="shift-canvas" height="220"></canvas>
+    <canvas id="shift-canvas"></canvas>
     <div class="insight">
       <strong>What changed — and what didn't:</strong> The most significant shift between Lincoln's
       pre-war and wartime reasoning is the rise of <strong style="color:var(--c-pragmatic)">pragmatic</strong>
@@ -540,9 +540,12 @@ function buildEraComparison() {
 }
 
 function buildShiftChart() {
+  // Replace dot-plot with a delta bar chart: change from pre-war to wartime
   const canvas = document.getElementById("shift-canvas");
   const W = canvas.parentElement.clientWidth - 40;
-  const H = 220; canvas.width = W; canvas.height = H;
+  const rowH = 32;
+  const H = RTYPES.length * rowH + 50;
+  canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
 
   const byEra = {};
@@ -559,50 +562,53 @@ function buildShiftChart() {
     warAvg[r] = war.reduce((a,s)=>a+(s.reasoning[r]||0),0)/Math.max(war.length,1);
   });
 
-  const maxVal = Math.max(...RTYPES.map(r => Math.max(preAvg[r], warAvg[r])));
-  const pad={left:110,top:20,right:80,bottom:20};
-  const pw=W-pad.left-pad.right;
-  const rowH = (H-pad.top-pad.bottom)/RTYPES.length;
+  const deltas = RTYPES.map(r => ({ r, delta: warAvg[r] - preAvg[r] }));
+  const maxAbs = Math.max(...deltas.map(d => Math.abs(d.delta))) * 1.15;
 
-  RTYPES.forEach((r,i) => {
-    const y = pad.top + i*rowH + rowH/2;
-    const preX = pad.left + (preAvg[r]/maxVal)*pw;
-    const warX = pad.left + (warAvg[r]/maxVal)*pw;
+  const labelW = 110;
+  const pad = { left: labelW, top: 30, right: 120, bottom: 20 };
+  const pw = W - pad.left - pad.right;
+  const midX = pad.left + pw / 2;
 
-    // Label
-    ctx.fillStyle=RCOLORS[r]; ctx.font="bold 11px sans-serif"; ctx.textAlign="right";
-    ctx.fillText(r, pad.left-8, y+4);
+  // Column headers
+  ctx.fillStyle = "#4a9eff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText("← Pre-War higher", pad.left + pw * 0.25, 16);
+  ctx.fillStyle = "#ff6b4a";
+  ctx.fillText("Wartime higher →", pad.left + pw * 0.75, 16);
 
-    // Connecting line
-    ctx.strokeStyle="#2e3148"; ctx.lineWidth=1; ctx.setLineDash([2,2]);
-    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+pw,y); ctx.stroke();
-    ctx.setLineDash([]);
+  // Center line
+  ctx.strokeStyle = "#8b8fa8"; ctx.lineWidth = 1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(midX, pad.top - 10); ctx.lineTo(midX, H - pad.bottom); ctx.stroke();
+  ctx.fillStyle = "#8b8fa8"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText("no change", midX, H - 6);
 
-    // Pre-war dot
-    ctx.beginPath(); ctx.arc(preX,y,6,0,Math.PI*2);
-    ctx.fillStyle=ERA_COLORS["pre-war"]+"cc"; ctx.fill();
-    ctx.strokeStyle=ERA_COLORS["pre-war"]; ctx.lineWidth=1.5; ctx.stroke();
+  deltas.forEach(({ r, delta }, i) => {
+    const y = pad.top + i * rowH + rowH / 2;
+    const barLen = (Math.abs(delta) / maxAbs) * (pw / 2);
+    const barX = delta >= 0 ? midX : midX - barLen;
+    const color = delta >= 0 ? "#ff6b4a" : "#4a9eff";
 
-    // Wartime dot
-    ctx.beginPath(); ctx.arc(warX,y,6,0,Math.PI*2);
-    ctx.fillStyle=ERA_COLORS["wartime"]+"cc"; ctx.fill();
-    ctx.strokeStyle=ERA_COLORS["wartime"]; ctx.lineWidth=1.5; ctx.stroke();
+    // Row label
+    ctx.fillStyle = RCOLORS[r]; ctx.font = "bold 11px sans-serif"; ctx.textAlign = "right";
+    ctx.fillText(r, labelW - 8, y + 4);
 
-    // Arrow between
-    ctx.strokeStyle = warX > preX ? "#4aff9e" : "#ff4a6b";
-    ctx.lineWidth=1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(preX,y); ctx.lineTo(warX,y); ctx.stroke();
+    // Bar
+    ctx.fillStyle = color + "cc";
+    ctx.fillRect(barX, y - 8, barLen, 16);
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    ctx.strokeRect(barX, y - 8, barLen, 16);
+
+    // Delta label
+    const sign = delta >= 0 ? "+" : "";
+    ctx.fillStyle = "#e8e9f0"; ctx.font = "10px sans-serif";
+    ctx.textAlign = delta >= 0 ? "left" : "right";
+    const labelX = delta >= 0 ? midX + barLen + 4 : midX - barLen - 4;
+    ctx.fillText(`${sign}${delta.toFixed(2)}`, labelX, y + 4);
+
+    // Pre/war values on right margin
+    ctx.fillStyle = "#8b8fa8"; ctx.font = "9px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText(`${preAvg[r].toFixed(2)} → ${warAvg[r].toFixed(2)}`, W - 115, y + 4);
   });
-
-  // Legend
-  ctx.fillStyle=ERA_COLORS["pre-war"]; ctx.beginPath(); ctx.arc(W-70,12,6,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle="#ccc"; ctx.font="10px sans-serif"; ctx.textAlign="left"; ctx.fillText("Pre-War",W-60,16);
-  ctx.fillStyle=ERA_COLORS["wartime"]; ctx.beginPath(); ctx.arc(W-70,30,6,0,Math.PI*2); ctx.fill();
-  ctx.fillText("Wartime",W-60,34);
-  ctx.fillStyle="#4aff9e"; ctx.fillRect(W-70,46,20,3);
-  ctx.fillStyle="#ccc"; ctx.fillText("increased",W-46,50);
-  ctx.fillStyle="#ff4a6b"; ctx.fillRect(W-70,58,20,3);
-  ctx.fillText("decreased",W-46,62);
 }
 
 function buildFiveSpeeches() {
