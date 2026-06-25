@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln's Rhetoric: Devices, Appeals &amp; Fallacies</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #252836;
+  --border: #2e3148;
+  --text: #e8e9f0;
+  --muted: #8b8fa8;
+  --accent: #c9a84c;
+  --accent-light: #f0c96a;
+  --pre: #4a9eff;
+  --war: #ff6b4a;
+  --post: #4aff9e;
+
+  /* device colors */
+  --c-anaphora: #c97aff;
+  --c-antithesis: #ff6b4a;
+  --c-tricolon: #4a9eff;
+  --c-rq: #ffcc44;
+  --c-ethos: #80d4ff;
+  --c-pathos: #ff9d6a;
+  --c-logos: #a8ff78;
+  --c-fallacy: #ff4a6b;
+  --c-tradition: #ffb347;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.8rem 2rem 1.2rem;
+}
+header h1 { font-size: 1.5rem; color: var(--accent-light); margin-bottom: 0.3rem; }
+header p { color: var(--muted); font-size: 0.88rem; font-family: sans-serif; }
+nav.bc { font-family: sans-serif; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+nav.bc a { color: var(--accent); text-decoration: none; }
+
+/* ── TAB BAR ── */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  gap: 0.2rem;
+}
+.tab {
+  font-family: sans-serif; font-size: 0.82rem;
+  padding: 0.7rem 1.2rem;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 1.5rem 2rem 3rem; }
+.panel.active { display: block; }
+
+/* ── CORPUS OVERVIEW ── */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 700px) { .overview-grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem;
+}
+.card h3 {
+  font-family: sans-serif; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 1rem;
+}
+
+.bar-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+.bar-label {
+  font-family: sans-serif; font-size: 0.75rem;
+  color: var(--text); width: 150px; flex-shrink: 0;
+}
+.bar-track {
+  flex: 1; background: var(--border);
+  height: 10px; border-radius: 4px; overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.bar-num {
+  font-family: sans-serif; font-size: 0.72rem;
+  color: var(--muted); width: 30px; text-align: right;
+}
+
+.era-compare { display: flex; gap: 1rem; }
+.era-col { flex: 1; }
+.era-col h4 {
+  font-family: sans-serif; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+}
+
+/* ── SPEECH BROWSER ── */
+.browser-layout { display: flex; gap: 1.5rem; }
+.speech-list {
+  width: 280px; flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-y: auto;
+  max-height: 75vh;
+}
+.speech-item {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.speech-item:hover { background: var(--surface2); }
+.speech-item.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+.si-title { font-size: 0.8rem; color: var(--text); line-height: 1.3; }
+.si-date { font-family: sans-serif; font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.si-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+.device-analysis { flex: 1; }
+.da-header { margin-bottom: 1rem; }
+.da-header h2 { font-size: 1.1rem; color: var(--accent-light); margin-bottom: 0.3rem; }
+.da-meta { font-family: sans-serif; font-size: 0.78rem; color: var(--muted); display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.device-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.8rem;
+  border-left: 3px solid var(--border);
+}
+.dc-type {
+  font-family: sans-serif; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.dc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dc-example {
+  font-size: 0.8rem; color: var(--muted);
+  line-height: 1.5; font-style: italic;
+}
+
+.pronoun-chart { display: flex; gap: 1rem; margin-top: 0.5rem; }
+.pronoun-item { text-align: center; }
+.pronoun-val {
+  font-family: sans-serif; font-size: 1.4rem;
+  font-weight: bold; color: var(--accent-light);
+  display: block;
+}
+.pronoun-lbl {
+  font-family: sans-serif; font-size: 0.68rem;
+  color: var(--muted); text-transform: uppercase;
+}
+
+.no-devices {
+  color: var(--muted); font-family: sans-serif;
+  font-size: 0.85rem; font-style: italic;
+  padding: 1rem 0;
+}
+
+/* search */
+.search-bar {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem 0.8rem;
+  color: var(--text);
+  font-family: sans-serif; font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+  outline: none;
+}
+.search-bar:focus { border-color: var(--accent); }
+
+/* era badge */
+.era-badge {
+  display: inline-block; padding: 1px 6px;
+  border-radius: 10px; font-size: 0.68rem;
+  font-family: sans-serif;
+}
+.eb-pre { background: rgba(74,158,255,.15); color: var(--pre); border: 1px solid var(--pre); }
+.eb-war { background: rgba(255,107,74,.15); color: var(--war); border: 1px solid var(--war); }
+.eb-post { background: rgba(74,255,158,.15); color: var(--post); border: 1px solid var(--post); }
+
+/* ── CLOSE READINGS ── */
+.cr-grid { display: flex; flex-direction: column; gap: 2.5rem; }
+
+.cr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cr-header {
+  background: var(--surface2);
+  padding: 1rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 0.5rem;
+}
+.cr-header h2 { font-size: 1rem; color: var(--accent-light); }
+.cr-header .cr-date { font-family: sans-serif; font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.cr-body { padding: 1.5rem; }
+
+.cr-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 700px) { .cr-two-col { grid-template-columns: 1fr; } }
+
+.cr-passage {
+  font-size: 0.85rem; line-height: 1.8;
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.cr-passage mark {
+  border-radius: 3px;
+  padding: 0 2px;
+  color: #000;
+}
+.m-anaphora { background: rgba(201,122,255,0.35); color: var(--text) !important; }
+.m-antithesis { background: rgba(255,107,74,0.35); color: var(--text) !important; }
+.m-tricolon { background: rgba(74,158,255,0.35); color: var(--text) !important; }
+.m-pathos { background: rgba(255,157,106,0.35); color: var(--text) !important; }
+.m-logos { background: rgba(168,255,120,0.35); color: var(--text) !important; }
+.m-ethos { background: rgba(128,212,255,0.35); color: var(--text) !important; }
+.m-fallacy { background: rgba(255,74,107,0.4); color: var(--text) !important; }
+
+.annotation {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1rem;
+  font-family: sans-serif; font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+.annotation h4 {
+  font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-family: sans-serif; font-size: 0.72rem; color: var(--muted);
+}
+.legend-swatch {
+  width: 12px; height: 12px; border-radius: 2px;
+}
+
+.ai-vs-human {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 5px 5px 0;
+  padding: 1rem 1.2rem;
+  margin-top: 1rem;
+  font-family: sans-serif; font-size: 0.82rem;
+  line-height: 1.65;
+}
+.ai-vs-human strong { color: var(--accent-light); }
+
+/* ── METHOD NOTE ── */
+.method-note {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 1rem 1.2rem;
+  margin-top: 2.5rem;
+  font-family: sans-serif; font-size: 0.82rem;
+  line-height: 1.65; color: var(--muted);
+}
+.method-note strong { color: var(--accent-light); }
+
+/* filter bar */
+.filter-bar {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.fb-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); font-family: sans-serif; font-size: 0.74rem;
+  padding: 0.25rem 0.7rem; border-radius: 12px;
+  cursor: pointer; transition: all 0.12s;
+}
+.fb-btn:hover { color: var(--text); border-color: var(--accent); }
+.fb-btn.active { color: var(--text); border-color: currentColor; background: var(--bg); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="bc"><a href="../../index.html">Lincoln Project</a> &rsaquo; Rhetoric Miner</nav>
+  <h1>Lincoln's Rhetoric: Devices, Appeals &amp; Fallacies</h1>
+  <p>Computational detection across 125 speeches &mdash; with student close readings of four landmark texts</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">Corpus Overview</div>
+  <div class="tab" data-tab="browser">Speech Browser</div>
+  <div class="tab" data-tab="readings">Close Readings</div>
+</div>
+
+<!-- OVERVIEW TAB -->
+<div class="panel active" id="panel-overview">
+
+  <div class="overview-grid">
+    <div class="card">
+      <h3>Rhetorical Devices &mdash; Corpus Totals</h3>
+      <div id="device-bars"></div>
+    </div>
+    <div class="card">
+      <h3>Device Frequency by Era</h3>
+      <div class="era-compare" id="era-compare"></div>
+    </div>
+    <div class="card">
+      <h3>Pronoun Strategy &mdash; Corpus Average (per 1,000 words)</h3>
+      <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-bottom:0.8rem;">
+        Pronoun choice signals how Lincoln positioned himself relative to his audience.</p>
+      <div id="pronoun-bars"></div>
+    </div>
+    <div class="card">
+      <h3>Fallacies &amp; Persuasion Shortcuts</h3>
+      <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-bottom:0.8rem;">
+        Logical fallacies detected algorithmically. Numbers are minimums &mdash; human reading finds more.</p>
+      <div id="fallacy-bars"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3>What the Data Shows &mdash; Student Observation</h3>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text);margin-bottom:0.8rem;">
+      The most striking finding in this corpus overview is the dominance of <strong style="color:var(--c-tricolon)">tricolon</strong>
+      (244 instances) &mdash; the device of grouping three parallel elements. Lincoln used this constantly, from small
+      phrase-level constructions (&ldquo;government of the people, by the people, for the people&rdquo;) to large
+      structural arguments built in three stages. This is consistent with classical oratory, but Lincoln
+      deployed it with unusual frequency for a 19th-century American politician.
+    </p>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text);margin-bottom:0.8rem;">
+      <strong style="color:var(--c-ethos)">Ethos appeals</strong> (134) significantly outnumber
+      <strong style="color:var(--c-pathos)">pathos</strong> (58) and <strong style="color:var(--c-logos)">logos</strong> (42).
+      Lincoln constantly grounded his arguments in the authority of the Constitution and the Founders &mdash; not
+      in emotion alone, and not in pure logic alone. This balanced appeal was strategic: it allowed him to
+      claim that his opponents, not he, were the radicals departing from American tradition.
+    </p>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text);">
+      The relatively low count of <strong style="color:var(--c-fallacy)">false dichotomies</strong> (11) is
+      interesting but should be read carefully. The algorithm only catches explicit &ldquo;either/or&rdquo; framing.
+      Lincoln's famous argument that the nation &ldquo;cannot endure permanently half slave and half free&rdquo;
+      is a structural false dichotomy that the algorithm misses because it doesn't use the word &ldquo;either.&rdquo;
+      This is where close reading corrects the machine.
+    </p>
+  </div>
+
+</div>
+
+<!-- BROWSER TAB -->
+<div class="panel" id="panel-browser">
+  <div class="browser-layout">
+    <div>
+      <input class="search-bar" id="speech-search" placeholder="Search speeches..." />
+      <div class="filter-bar" id="era-filter">
+        <button class="fb-btn active" data-era="all">All</button>
+        <button class="fb-btn" data-era="pre-war">Pre-War</button>
+        <button class="fb-btn" data-era="wartime">Wartime</button>
+      </div>
+      <div class="speech-list" id="speech-list"></div>
+    </div>
+    <div class="device-analysis" id="device-analysis">
+      <p style="color:var(--muted);font-family:sans-serif;font-size:0.85rem;padding-top:2rem;">
+        Select a speech from the list to see its rhetorical analysis.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSE READINGS TAB -->
+<div class="panel" id="panel-readings">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(201,122,255,0.5)"></div>Anaphora</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,107,74,0.5)"></div>Antithesis</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,158,255,0.5)"></div>Tricolon</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,157,106,0.5)"></div>Pathos</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(128,212,255,0.5)"></div>Ethos</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(168,255,120,0.5)"></div>Logos</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,74,107,0.5)"></div>Fallacy / questionable reasoning</div>
+  </div>
+
+  <div class="cr-grid">
+
+    <!-- 1. HOUSE DIVIDED -->
+    <div class="cr-card">
+      <div class="cr-header">
+        <div>
+          <h2>A House Divided</h2>
+          <div class="cr-date">June 16, 1858 &mdash; Republican State Convention, Springfield, IL <span class="era-badge eb-pre">Pre-War</span></div>
+        </div>
+      </div>
+      <div class="cr-body">
+        <div class="cr-two-col">
+          <div>
+            <div class="cr-passage">
+              &ldquo;<mark class="m-fallacy">A house divided against itself cannot stand. I believe this government cannot endure, permanently, half slave and half free.</mark> I do not expect the Union to be dissolved &mdash; I do not expect the house to fall &mdash; but I do expect it will cease to be divided. <mark class="m-antithesis">It will become all one thing, or all the other.</mark> Either the opponents of slavery will arrest the further spread of it, and place it where the public mind shall rest in the belief that it is in course of ultimate extinction; <mark class="m-fallacy">or its advocates will push it forward, till it shall become alike lawful in all the States, old as well as new &mdash; North as well as South.</mark>&rdquo;
+            </div>
+          </div>
+          <div>
+            <div class="annotation">
+              <h4>Student Close Reading</h4>
+              <p>The opening quotation from Scripture (Mark 3:25) is a sophisticated ethos move: Lincoln borrows the moral authority of the Bible while immediately applying it to a political claim. This lets him frame the slavery question as both a constitutional crisis <em>and</em> a moral one, without explicitly preaching.</p>
+              <p style="margin-top:0.7rem">The phrase &ldquo;all one thing, or all the other&rdquo; is a textbook false dichotomy, and the AI flagged it correctly. But notice what Lincoln doesn't say: he presents no third path, no gradual solution, no compromise. For a speech to a Republican convention, this is strategic &mdash; he is ruling out the moderate Douglas position before Douglas can speak.</p>
+              <p style="margin-top:0.7rem">The repetition &ldquo;I do not expect... I do not expect... but I do expect&rdquo; is anaphora that the algorithm partially caught. What it can't capture is the rhythm: Lincoln is slowing the audience down, making them wait for the key word <em>expect</em> to arrive the third time as a positive claim.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ai-vs-human">
+          <strong>Where AI and close reading diverge:</strong> The algorithm tagged this speech high in <em>ethos</em> (Constitution references) and found the false dichotomy. But it missed the most important rhetorical move: Lincoln never once uses the word &ldquo;abolition&rdquo; or calls for immediate emancipation. The speech is built around what it <em>withholds</em> &mdash; an absence no keyword search can find. Lincoln is persuading an audience that fears radicalism by being carefully, almost surgically, incomplete.
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. GETTYSBURG -->
+    <div class="cr-card">
+      <div class="cr-header">
+        <div>
+          <h2>Gettysburg Address</h2>
+          <div class="cr-date">November 19, 1863 &mdash; Dedication of Soldiers' National Cemetery <span class="era-badge eb-war">Wartime</span></div>
+        </div>
+      </div>
+      <div class="cr-body">
+        <div class="cr-two-col">
+          <div>
+            <div class="cr-passage">
+              &ldquo;<mark class="m-ethos">Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.</mark> Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. &hellip; <mark class="m-antithesis">The world will little note, nor long remember what we say here, but it can never forget what they did here.</mark> &hellip; <mark class="m-tricolon">that government of the people, by the people, for the people, shall not perish from the earth.</mark>&rdquo;
+            </div>
+          </div>
+          <div>
+            <div class="annotation">
+              <h4>Student Close Reading</h4>
+              <p>Lincoln opens with &ldquo;Four score and seven years ago&rdquo; rather than &ldquo;eighty-seven years ago.&rdquo; The archaic phrasing is deliberate: it echoes biblical language and makes 1776 feel ancient and sacred, not recent and contested. The AI does not flag this because no algorithm detects register.</p>
+              <p style="margin-top:0.7rem">The speech redefines the founding. Lincoln says the nation was &ldquo;dedicated to the proposition that all men are created equal&rdquo; &mdash; but the Constitution's framers did not abolish slavery. This is a rhetorical reframing of American history that Lincoln presents as simple fact. It is one of the most consequential persuasive moves in American political speech, and it passes without argument.</p>
+              <p style="margin-top:0.7rem">The closing tricolon &ldquo;of the people, by the people, for the people&rdquo; was not original to Lincoln &mdash; it echoes Theodore Parker. But Lincoln's phrasing made it permanent. This is worth asking: does borrowing a phrase make it less powerful, or more?</p>
+            </div>
+          </div>
+        </div>
+        <div class="ai-vs-human">
+          <strong>Where AI and close reading diverge:</strong> The algorithm found strong tricolon and ethos. It did not detect the speech's most audacious move: a 272-word speech at a cemetery dedication that <em>never mentions the battle</em>, never names a general, and barely acknowledges the dead &mdash; pivoting instead to a future political commitment. The absence of what a funeral oration conventionally contains is itself rhetorical. The machine counts what's there; the reader must notice what isn't.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. COOPER UNION -->
+    <div class="cr-card">
+      <div class="cr-header">
+        <div>
+          <h2>Cooper Union Address</h2>
+          <div class="cr-date">February 27, 1860 &mdash; Cooper Union, New York City <span class="era-badge eb-pre">Pre-War</span></div>
+        </div>
+      </div>
+      <div class="cr-body">
+        <div class="cr-two-col">
+          <div>
+            <div class="cr-passage">
+              &ldquo;<mark class="m-logos">It is surely safe to assume that the thirty-nine framers of the original Constitution... fully understood the subject... and acted upon it as they understood it. If this be true... then their understanding of it afforded a just basis for the assumption that the framers did not intend to prohibit the federal government from controlling slavery in the federal territories.</mark>&rdquo;
+              <br><br>
+              &ldquo;<mark class="m-ethos">Neither let us be slandered from our duty by false accusations against us, nor frightened from it by menaces of destruction to the Government nor of dungeons to ourselves. <mark class="m-anaphora">Let us have faith that right makes might, and in that faith, let us, to the end, dare to do our duty as we understand it.</mark></mark>&rdquo;
+            </div>
+          </div>
+          <div>
+            <div class="annotation">
+              <h4>Student Close Reading</h4>
+              <p>Cooper Union is Lincoln's most <em>logos</em>-heavy speech, and the data confirms it: he constructs a methodical historical argument citing 34 of the 39 framers of the Constitution by name or by vote record. This is deliberate audience targeting &mdash; he is speaking to New York elites who expected rigorous argument, not frontier oratory.</p>
+              <p style="margin-top:0.7rem">But notice the close: the speech ends not with more evidence, but with a call to moral courage. &ldquo;Let us have faith that right makes might&rdquo; is pure pathos after 7,000 words of logos. Lincoln seems aware that argument alone doesn't move people to action; it only moves them to agreement. He needs emotion at the end to convert agreement into commitment.</p>
+              <p style="margin-top:0.7rem">The anaphora of &ldquo;let us&rdquo; in the closing is the speech's most remembered passage. Yet the algorithm didn't catch it because &ldquo;let&rdquo; is not in its skip list. This is a reminder that rhetorical function depends on context, not just word frequency.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ai-vs-human">
+          <strong>Where AI and close reading diverge:</strong> The algorithm correctly identified this as the most logos-dominant speech in the corpus. What it cannot measure is the persuasive <em>purpose</em> of that structure: Lincoln was a Western lawyer largely unknown to Eastern audiences. The density of legal argument was itself a signal &mdash; it said <em>I am serious; I belong in this room.</em> The rhetoric is not just in the words but in the choice to use that kind of argument at all.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SECOND INAUGURAL -->
+    <div class="cr-card">
+      <div class="cr-header">
+        <div>
+          <h2>Second Inaugural Address</h2>
+          <div class="cr-date">March 4, 1865 &mdash; U.S. Capitol <span class="era-badge eb-war">Wartime</span></div>
+        </div>
+      </div>
+      <div class="cr-body">
+        <div class="cr-two-col">
+          <div>
+            <div class="cr-passage">
+              &ldquo;<mark class="m-ethos">Both parties deprecated war, but one of them would make war rather than let the nation survive, and the other would accept war rather than let it perish, and the war came.</mark>&rdquo;
+              <br><br>
+              &ldquo;<mark class="m-pathos">Both read the same Bible and pray to the same God, and each invokes His aid against the other. It may seem strange that any men should dare to ask a just God's assistance in wringing their bread from the sweat of other men's faces, but let us judge not, that we be not judged.</mark>&rdquo;
+              <br><br>
+              &ldquo;<mark class="m-tricolon">With malice toward none, with charity for all, with firmness in the right as God gives us to see the right, let us strive on to finish the work we are in.</mark>&rdquo;
+            </div>
+          </div>
+          <div>
+            <div class="annotation">
+              <h4>Student Close Reading</h4>
+              <p>The Second Inaugural is only 701 words &mdash; shorter than most of Lincoln's campaign speeches. In 1865, after four years of the bloodiest war in American history, brevity was itself a statement. There was nothing left to argue. The algorithm's FK score of 20.7 (one of the highest in the corpus) reflects sentence complexity, but misses that this speech <em>feels</em> simple &mdash; it reaches for something beyond argument.</p>
+              <p style="margin-top:0.7rem">The phrase &ldquo;and the war came&rdquo; is one of the most studied sentences in American rhetoric. It attributes the war to no one &mdash; not the South, not the North. After four years during which each side blamed the other, this passive construction is a radical act of rhetorical de-escalation. The algorithm can't flag passive voice as a rhetorical device; a reader must.</p>
+              <p style="margin-top:0.7rem">The closing tricolon &ldquo;with malice toward none, with charity for all, with firmness in the right&rdquo; is remarkable because it pairs <em>mercy</em> and <em>firmness</em> in the same breath &mdash; a tension Lincoln doesn't resolve. He leaves it unresolved deliberately. That unresolved tension is the speech's argument.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ai-vs-human">
+          <strong>Where AI and close reading diverge:</strong> The algorithm tagged this speech high in <em>religion-morality</em> and found pathos and tricolon. But it cannot detect the speech's most unusual quality: Lincoln declines to celebrate. He is speaking as the winning side of a war, and he does not gloat, assign blame, or promise glory. The absence of triumphalism in a victory speech is the rhetorical move &mdash; and it requires a human reader to notice that something expected is simply not there.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.cr-grid -->
+
+  <div class="method-note">
+    <strong>Methodological Note</strong><br>
+    Rhetorical devices in this project were detected using regular-expression pattern matching across all 125 speech texts: anaphora by repeated sentence-opening phrases, antithesis by &ldquo;not X but Y&rdquo; constructions, tricolon by comma-separated triplets, and so on. This approach finds reliable minimums but undercounts significantly &mdash; rhetorical effect often depends on rhythm, emphasis, and context that text patterns cannot capture. The close readings above represent the student's corrective layer: passages where the algorithmic tagging was right for the wrong reason, or where the most important move was an <em>absence</em> rather than a presence. Students using this tool should treat the device counts as a starting point for reading, not a substitute for it.
+  </div>
+
+</div><!-- /panel-readings -->
+
+<script>
+const DEVICE_COLORS = {
+  "anaphora": "#c97aff",
+  "antithesis": "#ff6b4a",
+  "tricolon": "#4a9eff",
+  "rhetorical-question": "#ffcc44",
+  "ethos": "#80d4ff",
+  "pathos": "#ff9d6a",
+  "logos": "#a8ff78",
+  "false-dichotomy": "#ff4a6b",
+  "slippery-slope": "#ff4a6b",
+  "appeal-to-tradition": "#ffb347",
+};
+
+const DEVICE_LABELS = {
+  "anaphora": "Anaphora",
+  "antithesis": "Antithesis",
+  "tricolon": "Tricolon (rule of three)",
+  "rhetorical-question": "Rhetorical Question",
+  "ethos": "Ethos Appeal",
+  "pathos": "Pathos Appeal",
+  "logos": "Logos Appeal",
+  "false-dichotomy": "False Dichotomy",
+  "slippery-slope": "Slippery Slope",
+  "appeal-to-tradition": "Appeal to Tradition",
+};
+
+let rhetoricData = [];
+
+async function init() {
+  const resp = await fetch("../data/rhetoric.json");
+  rhetoricData = await resp.json();
+  buildOverview();
+  buildSpeechList();
+  setupTabs();
+  setupSearch();
+  setupEraFilter();
+}
+
+function buildOverview() {
+  // Device bars
+  const totals = {};
+  rhetoricData.forEach(s => {
+    Object.entries(s.deviceCounts || {}).forEach(([k,v]) => {
+      totals[k] = (totals[k] || 0) + v;
+    });
+  });
+
+  const deviceOrder = ["tricolon","ethos","antithesis","rhetorical-question",
+                        "pathos","anaphora","logos","false-dichotomy","appeal-to-tradition","slippery-slope"];
+  const maxVal = Math.max(...Object.values(totals));
+
+  const deviceBars = document.getElementById("device-bars");
+  deviceOrder.forEach(dev => {
+    if (!totals[dev]) return;
+    deviceBars.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-label">${DEVICE_LABELS[dev] || dev}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${(totals[dev]/maxVal*100).toFixed(1)}%;background:${DEVICE_COLORS[dev]}"></div>
+        </div>
+        <div class="bar-num">${totals[dev]}</div>
+      </div>`;
+  });
+
+  // Era compare
+  const eras = ["pre-war","wartime","post-war"];
+  const eraEl = document.getElementById("era-compare");
+  eras.forEach(era => {
+    const speeches = rhetoricData.filter(s => s.era === era);
+    if (!speeches.length) return;
+    const eraTotals = {};
+    speeches.forEach(s => {
+      Object.entries(s.deviceCounts || {}).forEach(([k,v]) => {
+        eraTotals[k] = (eraTotals[k] || 0) + v;
+      });
+    });
+    const eraMax = Math.max(...Object.values(eraTotals), 1);
+    const eraColor = era === "pre-war" ? "#4a9eff" : era === "wartime" ? "#ff6b4a" : "#4aff9e";
+    const label = era === "pre-war" ? "Pre-War" : era === "wartime" ? "Wartime" : "Post-War";
+    let html = `<div class="era-col"><h4 style="color:${eraColor}">${label} (${speeches.length})</h4>`;
+    deviceOrder.slice(0,6).forEach(dev => {
+      if (!eraTotals[dev]) return;
+      html += `<div class="bar-row" style="margin-bottom:0.35rem">
+        <div class="bar-label" style="font-size:0.7rem;width:100px">${DEVICE_LABELS[dev]||dev}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(eraTotals[dev]/eraMax*100).toFixed(1)}%;background:${DEVICE_COLORS[dev]}"></div></div>
+        <div class="bar-num" style="font-size:0.68rem">${eraTotals[dev]}</div>
+      </div>`;
+    });
+    html += '</div>';
+    eraEl.innerHTML += html;
+  });
+
+  // Pronoun bars
+  const pronounKeys = ["we","you","i","they"];
+  const pronounLabels = {"we":"We/Us/Our","you":"You/Your","i":"I (first person)","they":"They/Them/Their"};
+  const pronounColors = {"we":"#4a9eff","you":"#ffcc44","i":"#c97aff","they":"#ff6b4a"};
+  const avgPronouns = {};
+  pronounKeys.forEach(k => {
+    const vals = rhetoricData.filter(s=>s.pronouns).map(s=>s.pronouns[k]||0);
+    avgPronouns[k] = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+  });
+  const pMax = Math.max(...Object.values(avgPronouns));
+  const pEl = document.getElementById("pronoun-bars");
+  pronounKeys.forEach(k => {
+    pEl.innerHTML += `<div class="bar-row">
+      <div class="bar-label">${pronounLabels[k]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(avgPronouns[k]/pMax*100).toFixed(1)}%;background:${pronounColors[k]}"></div></div>
+      <div class="bar-num">${avgPronouns[k]}</div>
+    </div>`;
+  });
+  pEl.innerHTML += `<p style="font-family:sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.7rem">
+    The dominance of <strong style="color:#4a9eff">we/our</strong> over <strong style="color:#c97aff">I</strong>
+    reveals Lincoln's consistent self-placement inside the nation's story, not above it.
+    The low <strong style="color:#ffcc44">you</strong> score shows he rarely addressed audiences directly &mdash;
+    preferring collective framing even in campaign speeches.</p>`;
+
+  // Fallacy bars
+  const fallacies = ["false-dichotomy","slippery-slope","appeal-to-tradition"];
+  const fallacyTotals = {};
+  fallacies.forEach(f => { fallacyTotals[f] = totals[f] || 0; });
+  const fMax = Math.max(...Object.values(fallacyTotals), 1);
+  const fEl = document.getElementById("fallacy-bars");
+  fallacies.forEach(f => {
+    fEl.innerHTML += `<div class="bar-row">
+      <div class="bar-label">${DEVICE_LABELS[f]||f}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(fallacyTotals[f]/fMax*100).toFixed(1)}%;background:var(--c-fallacy)"></div></div>
+      <div class="bar-num">${fallacyTotals[f]}</div>
+    </div>`;
+  });
+  fEl.innerHTML += `<p style="font-family:sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.7rem">
+    These numbers undercount significantly. The algorithm only catches explicit verbal patterns.
+    Lincoln's structural false dichotomies &mdash; arguments that implicitly foreclose middle positions
+    &mdash; require a human reader to identify. See the Close Readings tab for examples.</p>`;
+}
+
+let activeEra = "all";
+let searchQuery = "";
+
+function buildSpeechList(filtered) {
+  const list = document.getElementById("speech-list");
+  const data = filtered || rhetoricData;
+  list.innerHTML = "";
+  data.forEach(s => {
+    const eraClass = s.era === "pre-war" ? "eb-pre" : s.era === "wartime" ? "eb-war" : "eb-post";
+    const div = document.createElement("div");
+    div.className = "speech-item";
+    div.dataset.id = s.id;
+    const topDevices = Object.entries(s.deviceCounts || {})
+      .sort((a,b)=>b[1]-a[1]).slice(0,3)
+      .map(([k]) => `<span style="font-family:sans-serif;font-size:0.65rem;padding:1px 5px;border-radius:8px;background:${DEVICE_COLORS[k]}22;color:${DEVICE_COLORS[k]};border:1px solid ${DEVICE_COLORS[k]}">${DEVICE_LABELS[k]||k}</span>`)
+      .join("");
+    div.innerHTML = `
+      <div class="si-title">${s.title}</div>
+      <div class="si-date">${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span></div>
+      <div class="si-badges">${topDevices}</div>`;
+    div.addEventListener("click", () => showSpeechAnalysis(s, div));
+    list.appendChild(div);
+  });
+}
+
+function filterList() {
+  let data = rhetoricData;
+  if (activeEra !== "all") data = data.filter(s => s.era === activeEra);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    data = data.filter(s => s.title.toLowerCase().includes(q) || s.displayDate.toLowerCase().includes(q));
+  }
+  buildSpeechList(data);
+}
+
+function showSpeechAnalysis(s, el) {
+  document.querySelectorAll(".speech-item").forEach(i => i.classList.remove("active"));
+  el.classList.add("active");
+
+  const eraClass = s.era === "pre-war" ? "eb-pre" : s.era === "wartime" ? "eb-war" : "eb-post";
+  const da = document.getElementById("device-analysis");
+
+  const pronounHtml = s.pronouns ? `
+    <div class="card" style="margin-top:1rem">
+      <h3>Pronoun Strategy (per 1,000 words)</h3>
+      <div class="pronoun-chart">
+        ${Object.entries({we:s.pronouns.we,you:s.pronouns.you,i:s.pronouns.i,they:s.pronouns.they})
+          .map(([k,v]) => `<div class="pronoun-item">
+            <span class="pronoun-val" style="color:${k==='we'?'#4a9eff':k==='you'?'#ffcc44':k==='i'?'#c97aff':'#ff6b4a'}">${v}</span>
+            <span class="pronoun-lbl">${k==='we'?'WE/OUR':k==='you'?'YOU/YOUR':k==='i'?'I':k.toUpperCase()}</span>
+          </div>`).join("")}
+      </div>
+    </div>` : "";
+
+  const devicesHtml = (s.devices && s.devices.length)
+    ? `<div class="device-grid">${s.devices.map(d => `
+        <div class="device-card" style="border-left-color:${DEVICE_COLORS[d.device]||'#888'}">
+          <div class="dc-type">
+            <div class="dc-dot" style="background:${DEVICE_COLORS[d.device]||'#888'}"></div>
+            <span style="color:${DEVICE_COLORS[d.device]||'#888'}">${DEVICE_LABELS[d.device]||d.device}</span>
+          </div>
+          <div class="dc-example">&ldquo;${d.example}&rdquo;</div>
+        </div>`).join("")}</div>`
+    : `<p class="no-devices">No devices detected algorithmically in this speech. Try the Close Readings tab for hand-annotated examples.</p>`;
+
+  da.innerHTML = `
+    <div class="da-header">
+      <h2>${s.title}</h2>
+      <div class="da-meta">
+        <span>${s.displayDate}</span>
+        <span class="era-badge ${eraClass}">${s.era}</span>
+        <span>Audience: ${s.audience}</span>
+        <span>${s.wordCount.toLocaleString()} words</span>
+        <span>${s.totalDevices} devices detected</span>
+      </div>
+    </div>
+    <div style="font-size:0.82rem;line-height:1.7;color:var(--muted);margin-bottom:1rem;font-style:italic">
+      &ldquo;${s.textPreview}&hellip;&rdquo;
+    </div>
+    ${devicesHtml}
+    ${pronounHtml}`;
+}
+
+function setupTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+    });
+  });
+}
+
+function setupSearch() {
+  document.getElementById("speech-search").addEventListener("input", e => {
+    searchQuery = e.target.value;
+    filterList();
+  });
+}
+
+function setupEraFilter() {
+  document.querySelectorAll("#era-filter .fb-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#era-filter .fb-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeEra = btn.dataset.era;
+      filterList();
+    });
+  });
+}
+
+init();
+</script>
+</body>
+</html>
