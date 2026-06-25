@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Language of Lincoln: A Computational Rhetoric Project</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #252836;
+  --border: #2e3148;
+  --text: #e8e9f0;
+  --muted: #8b8fa8;
+  --accent: #c9a84c;
+  --accent-light: #f0c96a;
+  --pre: #4a9eff;
+  --war: #ff6b4a;
+  --post: #4aff9e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(160deg, #12151f 0%, #1a1d27 60%, #0f1117 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 4rem 2rem 3.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -60px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-family: sans-serif; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--accent); margin-bottom: 1.2rem;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--accent-light);
+  line-height: 1.2;
+  margin-bottom: 0.8rem;
+  max-width: 700px;
+  margin-left: auto; margin-right: auto;
+}
+
+.hero-sub {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 560px; margin: 0 auto 2rem;
+  line-height: 1.65; font-family: sans-serif;
+}
+
+.hero-stats {
+  display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.hero-stat { text-align: center; }
+.hero-stat-num {
+  display: block; font-size: 2rem; font-weight: bold;
+  color: var(--accent-light); font-family: sans-serif;
+}
+.hero-stat-lbl {
+  font-family: sans-serif; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+}
+
+.era-bar {
+  display: flex; max-width: 500px; margin: 0 auto;
+  border-radius: 4px; overflow: hidden; height: 6px;
+}
+.era-seg { height: 100%; }
+
+/* ── NAV CARDS ── */
+.projects {
+  max-width: 1100px; margin: 3rem auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.2rem;
+}
+
+.project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex; flex-direction: column;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.project-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.card-accent-bar { height: 3px; }
+
+.card-body { padding: 1.4rem 1.4rem 1rem; flex: 1; }
+
+.card-num {
+  font-family: sans-serif; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); margin-bottom: 0.5rem;
+}
+
+.card-title {
+  font-size: 1.1rem; color: var(--accent-light);
+  margin-bottom: 0.6rem; line-height: 1.3;
+}
+
+.card-desc {
+  font-family: sans-serif; font-size: 0.82rem;
+  color: var(--muted); line-height: 1.6;
+}
+
+.card-footer {
+  padding: 0.8rem 1.4rem;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.card-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.tag {
+  font-family: sans-serif; font-size: 0.65rem;
+  padding: 2px 7px; border-radius: 10px;
+  background: var(--surface2); color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.card-arrow {
+  font-size: 1rem; color: var(--accent);
+  transition: transform 0.15s;
+}
+.project-card:hover .card-arrow { transform: translateX(4px); }
+
+/* ── ABOUT SECTION ── */
+.about {
+  max-width: 780px; margin: 0 auto 4rem;
+  padding: 0 1.5rem;
+}
+
+.section-label {
+  font-family: sans-serif; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--accent); margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 560px) { .about-grid { grid-template-columns: 1fr; } }
+
+.about-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.2rem;
+}
+.about-card h3 {
+  font-size: 0.9rem; color: var(--accent-light);
+  margin-bottom: 0.7rem;
+}
+.about-card p {
+  font-family: sans-serif; font-size: 0.82rem;
+  color: var(--muted); line-height: 1.65;
+}
+.about-card p + p { margin-top: 0.6rem; }
+
+.workflow {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.2rem; margin-top: 1.2rem;
+}
+.workflow h3 { font-size: 0.9rem; color: var(--accent-light); margin-bottom: 1rem; }
+
+.workflow-steps {
+  display: flex; gap: 0; position: relative;
+  flex-wrap: wrap;
+}
+
+.workflow-step {
+  flex: 1; min-width: 120px;
+  text-align: center; padding: 0 0.5rem;
+  position: relative;
+}
+
+.workflow-step::after {
+  content: "→";
+  position: absolute; right: -8px; top: 50%;
+  transform: translateY(-60%);
+  color: var(--accent); font-size: 1rem;
+}
+.workflow-step:last-child::after { display: none; }
+
+.ws-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 0.5rem;
+  font-size: 1rem;
+}
+.ws-label {
+  font-family: sans-serif; font-size: 0.72rem; color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.ws-sub {
+  font-family: sans-serif; font-size: 0.65rem; color: var(--muted);
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 1.5rem 2rem; text-align: center;
+  font-family: sans-serif; font-size: 0.78rem; color: var(--muted);
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">ENG 6813 &mdash; AI for Code and Digital Humanities</div>
+  <h1>The Language of Lincoln</h1>
+  <p class="hero-sub">
+    A computational analysis of 125 speeches spanning Abraham Lincoln's career from 1832 to 1865 &mdash;
+    examining rhetoric, reasoning, audience, and the shift from opposition politician to wartime president.
+  </p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="hero-stat-num">125</span>
+      <span class="hero-stat-lbl">Speeches</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-num">33</span>
+      <span class="hero-stat-lbl">Years</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-num">5</span>
+      <span class="hero-stat-lbl">Analyses</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-num">~750k</span>
+      <span class="hero-stat-lbl">Words</span>
+    </div>
+  </div>
+  <div class="era-bar" title="Pre-War: 54 speeches | Wartime: 70 speeches | Post-War: 1 speech">
+    <div class="era-seg" style="width:43.2%;background:var(--pre)" title="Pre-War: 54"></div>
+    <div class="era-seg" style="width:56%;background:var(--war)" title="Wartime: 70"></div>
+    <div class="era-seg" style="width:0.8%;background:var(--post)" title="Post-War: 1"></div>
+  </div>
+  <p style="font-family:sans-serif;font-size:0.68rem;color:var(--muted);margin-top:0.5rem;letter-spacing:0.06em">
+    <span style="color:var(--pre)">&#9644; Pre-War</span> &nbsp;
+    <span style="color:var(--war)">&#9644; Wartime</span> &nbsp;
+    <span style="color:var(--post)">&#9644; Post-War</span>
+  </p>
+</section>
+
+<!-- PROJECT CARDS -->
+<div class="projects">
+
+  <a class="project-card" href="lincoln/timeline/">
+    <div class="card-accent-bar" style="background: linear-gradient(90deg, var(--pre), var(--war))"></div>
+    <div class="card-body">
+      <div class="card-num">01 &mdash; Metadata Timeline</div>
+      <div class="card-title">Speeches in Context</div>
+      <p class="card-desc">
+        Every speech plotted across Lincoln's career against historical turning points &mdash;
+        Fort Sumter, the Emancipation Proclamation, Gettysburg, Lee's surrender.
+        Filter by era or theme to see how his focus shifted in real time.
+      </p>
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Timeline</span>
+        <span class="tag">Themes</span>
+        <span class="tag">Reading Level</span>
+        <span class="tag">Word Count</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="project-card" href="lincoln/rhetoric/">
+    <div class="card-accent-bar" style="background: linear-gradient(90deg, #c97aff, #ff6b4a)"></div>
+    <div class="card-body">
+      <div class="card-num">02 &mdash; Rhetoric Miner</div>
+      <div class="card-title">Devices, Appeals &amp; Fallacies</div>
+      <p class="card-desc">
+        Anaphora, antithesis, tricolon, ethos, pathos, logos, false dichotomy &mdash;
+        detected across all 125 speeches. Includes deep analysis of four landmark
+        passages: House Divided, Gettysburg, Cooper Union, Second Inaugural.
+      </p>
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Rhetoric</span>
+        <span class="tag">Fallacies</span>
+        <span class="tag">Passages</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="project-card" href="lincoln/audience/">
+    <div class="card-accent-bar" style="background: linear-gradient(90deg, #ffcc44, #80d4ff)"></div>
+    <div class="card-body">
+      <div class="card-num">03 &mdash; Audience Targeting</div>
+      <div class="card-title">How Lincoln Changed His Voice</div>
+      <p class="card-desc">
+        Lincoln averaged 21-word sentences for soldiers and 40-word sentences for
+        the general public. This tool maps how sentence length, vocabulary, reading
+        level, and pronoun choice shifted by audience type across his career.
+      </p>
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Audience</span>
+        <span class="tag">Pronouns</span>
+        <span class="tag">Complexity</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="project-card" href="lincoln/reasoning/">
+    <div class="card-accent-bar" style="background: linear-gradient(90deg, #ff9d6a, #4aff9e)"></div>
+    <div class="card-body">
+      <div class="card-num">04 &mdash; Argumentation Map</div>
+      <div class="card-title">How Lincoln Built His Cases</div>
+      <p class="card-desc">
+        Moral, legal, historical, pragmatic, deductive, analogical &mdash; seven
+        reasoning types tracked across the full corpus. The wartime shift from
+        metaphor to necessity is visible in the data. Browse any speech's
+        reasoning profile individually.
+      </p>
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Reasoning</span>
+        <span class="tag">Argumentation</span>
+        <span class="tag">Era Shift</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- ABOUT -->
+<div class="about">
+  <div class="section-label">About This Project</div>
+
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>The Corpus</h3>
+      <p>125 Lincoln speeches were drawn from public domain sources spanning 1832 to April 1865 &mdash;
+      from his first campaign broadside to his last public address three days before his assassination.</p>
+      <p>The corpus covers every major phase of his public life: Illinois legislator, one-term congressman,
+      prairie lawyer, Senate candidate, presidential candidate, and wartime president.</p>
+    </div>
+    <div class="about-card">
+      <h3>The Question</h3>
+      <p>How did Lincoln's language work on its audiences? What did it emphasize, what did it leave out,
+      and what did it make easy to believe without argument?</p>
+      <p>These tools analyze his speeches computationally across four dimensions: context, rhetoric,
+      audience adaptation, and argumentation. Each tool surfaces patterns at scale; each also identifies
+      the limits of what scale alone can reveal.</p>
+    </div>
+  </div>
+
+  <div class="workflow">
+    <h3>Analytical Workflow</h3>
+    <div class="workflow-steps">
+      <div class="workflow-step">
+        <div class="ws-icon">&#128196;</div>
+        <div class="ws-label">Corpus</div>
+        <div class="ws-sub">125 speeches, plain text</div>
+      </div>
+      <div class="workflow-step">
+        <div class="ws-icon">&#9881;</div>
+        <div class="ws-label">Computation</div>
+        <div class="ws-sub">Pattern detection, scoring, metadata</div>
+      </div>
+      <div class="workflow-step">
+        <div class="ws-icon">&#128202;</div>
+        <div class="ws-label">Visualization</div>
+        <div class="ws-sub">Interactive charts and browsers</div>
+      </div>
+      <div class="workflow-step">
+        <div class="ws-icon">&#128269;</div>
+        <div class="ws-label">Interrogation</div>
+        <div class="ws-sub">Questioning and refining the results</div>
+      </div>
+      <div class="workflow-step">
+        <div class="ws-icon">&#9997;</div>
+        <div class="ws-label">Analysis</div>
+        <div class="ws-sub">What the data means &mdash; and doesn't</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-card" style="margin-top:1.2rem">
+    <h3>A Note on Method</h3>
+    <p>Every tool in this project uses computational detection &mdash; keyword scoring, pattern matching,
+    formula-based readability scores &mdash; to surface patterns across a corpus too large to read all at once.
+    These methods are genuinely useful for identifying what to look at more carefully. They are not
+    substitutes for reading.</p>
+    <p style="margin-top:0.6rem">The most important findings here came from questioning the output:
+    noticing that Flesch-Kincaid scores misrepresent 19th-century oratory, that Lincoln's greatest speeches
+    are also his most self-effacing (the word &ldquo;I&rdquo; appears zero times at Gettysburg), and that
+    his structural false dichotomies go undetected because they don't use the word &ldquo;either.&rdquo;
+    The computational layer raised these questions. Reading answered them.</p>
+  </div>
+</div>
+
+<footer>
+  Built with HTML, CSS, and JavaScript &mdash; no external libraries.
+  Data: 125 Lincoln speeches from public domain sources, 1832&ndash;1865. &nbsp;|&nbsp;
+  <a href="https://github.com/KGSUCF/ENG6813AIforCodeandDigitalHumanities">GitHub Repository</a>
+</footer>
+
+</body>
+</html>
