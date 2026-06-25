@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln's Speeches: A Metadata Timeline</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #252836;
+    --border: #2e3148;
+    --text: #e8e9f0;
+    --text-muted: #8b8fa8;
+    --pre-war: #4a9eff;
+    --wartime: #ff6b4a;
+    --post-war: #4aff9e;
+    --accent: #c9a84c;
+    --accent-light: #f0c96a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2rem 1.5rem;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    color: var(--accent-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.3rem;
+  }
+
+  header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-family: sans-serif;
+  }
+
+  nav.breadcrumb {
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+
+  nav.breadcrumb a { color: var(--accent); text-decoration: none; }
+  nav.breadcrumb a:hover { text-decoration: underline; }
+
+  .main-layout {
+    display: flex;
+    height: calc(100vh - 130px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.2rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .sidebar h3 {
+    font-family: sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin: 1.2rem 0 0.5rem;
+  }
+
+  .sidebar h3:first-child { margin-top: 0; }
+
+  .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: sans-serif;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .filter-btn.active {
+    border-color: currentColor;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-pre { background: var(--pre-war); }
+  .dot-war { background: var(--wartime); }
+  .dot-post { background: var(--post-war); }
+  .dot-slavery { background: #c97aff; }
+  .dot-emancipation { background: var(--post-war); }
+  .dot-war-policy { background: var(--wartime); }
+  .dot-economy { background: #ffcc44; }
+  .dot-national { background: var(--pre-war); }
+  .dot-religion { background: #ff9d6a; }
+  .dot-constitutional { background: #80d4ff; }
+  .dot-partisan { background: #ff7eb3; }
+  .dot-territorial { background: #a8ff78; }
+
+  .count-badge {
+    margin-left: auto;
+    background: var(--border);
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  #reset-btn {
+    margin-top: 1rem;
+    width: 100%;
+    background: var(--border);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: sans-serif;
+    font-size: 0.78rem;
+    padding: 0.4rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  #reset-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .stat-row {
+    font-family: sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0.3rem 0;
+  }
+
+  .stat-row span { color: var(--accent-light); font-weight: bold; }
+
+  /* ── MAIN PANEL ── */
+  .main-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.5rem 3rem;
+    position: relative;
+  }
+
+  #timeline-container {
+    position: relative;
+    min-height: 400px;
+  }
+
+  /* Era bands */
+  .era-band {
+    position: absolute;
+    top: 0; bottom: 0;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  /* Historical event markers */
+  .event-marker {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    background: var(--border);
+    border-left: 1px dashed var(--border);
+    pointer-events: none;
+  }
+
+  .event-label {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-family: sans-serif;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Year axis */
+  #year-axis {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    height: 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+  }
+
+  .year-tick {
+    position: absolute;
+    top: 0;
+    font-family: sans-serif;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding-top: 4px;
+    border-left: 1px solid var(--border);
+    padding-left: 4px;
+    height: 100%;
+  }
+
+  /* Speech dots */
+  #speech-dots {
+    position: relative;
+    height: 120px;
+    margin-bottom: 0.5rem;
+  }
+
+  .speech-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translateX(-50%);
+    transition: transform 0.1s, opacity 0.15s;
+    border: 1px solid rgba(0,0,0,0.3);
+  }
+
+  .speech-dot:hover {
+    transform: translateX(-50%) scale(1.8);
+    z-index: 100;
+  }
+
+  .speech-dot.notable {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--accent-light);
+  }
+
+  .speech-dot.dimmed { opacity: 0.12; }
+
+  /* Era label row */
+  #era-labels {
+    position: relative;
+    height: 20px;
+    margin-bottom: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .era-label {
+    position: absolute;
+    font-family: sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    top: 4px;
+  }
+
+  /* Word count bars */
+  #wc-chart {
+    position: relative;
+    height: 80px;
+    margin-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wc-bar {
+    position: absolute;
+    bottom: 0;
+    width: 6px;
+    transform: translateX(-50%);
+    border-radius: 2px 2px 0 0;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    opacity: 0.7;
+  }
+
+  .wc-bar:hover { opacity: 1; }
+  .wc-bar.dimmed { opacity: 0.08; }
+
+  .chart-label {
+    font-family: sans-serif;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  /* FK chart */
+  #fk-chart {
+    position: relative;
+    height: 60px;
+    margin-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .fk-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    opacity: 0.75;
+  }
+
+  .fk-dot.dimmed { opacity: 0.08; }
+
+  /* Theme strip */
+  #theme-strip {
+    position: relative;
+    height: 140px;
+    margin-bottom: 0.3rem;
+  }
+
+  .theme-row {
+    position: relative;
+    height: 14px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+  }
+
+  .theme-row-label {
+    width: 130px;
+    font-family: sans-serif;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .theme-row-track {
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+
+  .theme-pip {
+    position: absolute;
+    width: 5px;
+    height: 10px;
+    border-radius: 1px;
+    transform: translateX(-50%);
+    top: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    opacity: 0.8;
+  }
+
+  .theme-pip.dimmed { opacity: 0.07; }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    max-width: 300px;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  #tooltip h4 {
+    color: var(--accent-light);
+    margin-bottom: 0.3rem;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+  }
+
+  #tooltip .tt-date { color: var(--text-muted); margin-bottom: 0.4rem; font-size: 0.75rem; }
+
+  #tooltip .tt-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem;
+  }
+
+  #tooltip .tag {
+    background: var(--border);
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  #tooltip .tt-stat { color: var(--text-muted); font-size: 0.75rem; }
+  #tooltip .tt-stat span { color: var(--text); }
+
+  /* Detail panel */
+  #detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem;
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  #detail-panel h2 {
+    color: var(--accent-light);
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  #detail-panel .dp-meta {
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+
+  #detail-panel .dp-excerpt {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    margin-top: 0.8rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .era-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-family: sans-serif;
+  }
+
+  .era-pre { background: rgba(74,158,255,0.15); color: var(--pre-war); border: 1px solid var(--pre-war); }
+  .era-wartime { background: rgba(255,107,74,0.15); color: var(--wartime); border: 1px solid var(--wartime); }
+  .era-post { background: rgba(74,255,158,0.15); color: var(--post-war); border: 1px solid var(--post-war); }
+
+  #close-detail {
+    float: right;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  #close-detail:hover { color: var(--text); }
+
+  /* Methodology note */
+  .method-note {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    margin-top: 2rem;
+    font-family: sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .method-note strong { color: var(--accent-light); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="breadcrumb"><a href="../../index.html">Lincoln Project</a> &rsaquo; Metadata Timeline</nav>
+  <h1>Lincoln's Speeches: A Metadata Timeline</h1>
+  <p>125 speeches (1832&ndash;1865) &mdash; date, context, theme, reading level, and length visualized across his career</p>
+</header>
+
+<div id="tooltip"></div>
+
+<div class="main-layout">
+  <aside class="sidebar">
+    <h3>Filter by Era</h3>
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="era" data-val="all">
+        <span class="dot" style="background:#888"></span> All Eras
+        <span class="count-badge" id="cnt-all">125</span>
+      </button>
+      <button class="filter-btn" data-filter="era" data-val="pre-war">
+        <span class="dot dot-pre"></span> Pre-War (before 1861)
+        <span class="count-badge" id="cnt-pre">54</span>
+      </button>
+      <button class="filter-btn" data-filter="era" data-val="wartime">
+        <span class="dot dot-war"></span> Wartime (1861&ndash;1865)
+        <span class="count-badge" id="cnt-war">70</span>
+      </button>
+      <button class="filter-btn" data-filter="era" data-val="post-war">
+        <span class="dot dot-post"></span> Post-War (Apr 1865)
+        <span class="count-badge" id="cnt-post">1</span>
+      </button>
+    </div>
+
+    <h3>Filter by Theme</h3>
+    <div class="filter-group">
+      <button class="filter-btn" data-filter="theme" data-val="slavery">
+        <span class="dot dot-slavery"></span> Slavery
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="emancipation">
+        <span class="dot dot-emancipation"></span> Emancipation
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="war-policy">
+        <span class="dot dot-war-policy"></span> War Policy
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="national-unity">
+        <span class="dot dot-national"></span> National Unity
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="economy">
+        <span class="dot dot-economy"></span> Economy
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="religion-morality">
+        <span class="dot dot-religion"></span> Religion &amp; Morality
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="constitutional-law">
+        <span class="dot dot-constitutional"></span> Constitutional Law
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="partisan-politics">
+        <span class="dot dot-partisan"></span> Partisan Politics
+      </button>
+      <button class="filter-btn" data-filter="theme" data-val="territorial-expansion">
+        <span class="dot dot-territorial"></span> Territorial Expansion
+      </button>
+    </div>
+
+    <button id="reset-btn">Reset Filters</button>
+
+    <h3>Showing</h3>
+    <div class="stat-row">Speeches: <span id="stat-count">125</span></div>
+    <div class="stat-row">Avg words: <span id="stat-wc">—</span></div>
+    <div class="stat-row">Avg grade level: <span id="stat-fk">—</span></div>
+  </aside>
+
+  <main class="main-panel">
+    <div id="timeline-container">
+      <div id="year-axis"></div>
+
+      <div class="chart-label">Speech occasions &mdash; dot size: notable landmark speech</div>
+      <div id="speech-dots"></div>
+
+      <div id="era-labels"></div>
+
+      <div class="chart-label">Word count (speech length)</div>
+      <div id="wc-chart"></div>
+
+      <div class="chart-label">Reading level (Flesch-Kincaid grade)</div>
+      <div id="fk-chart"></div>
+
+      <div class="chart-label">Theme presence by speech</div>
+      <div id="theme-strip"></div>
+    </div>
+
+    <div id="detail-panel">
+      <button id="close-detail">&times;</button>
+      <h2 id="dp-title"></h2>
+      <div class="dp-meta" id="dp-meta"></div>
+      <div class="dp-excerpt" id="dp-excerpt"></div>
+    </div>
+
+    <div class="method-note">
+      <strong>Methodological Note &mdash; Human + AI Workflow</strong><br>
+      The metadata in this visualization was generated computationally: dates were parsed from source filenames,
+      theme tags were assigned by keyword matching across the full texts, reading levels were calculated using
+      the Flesch-Kincaid formula, and audience classifications were inferred from title and occasion keywords.
+      The AI tool surfaced patterns across all 125 speeches simultaneously &mdash; a task that would take weeks
+      by hand. However, the student's close reading (see the Rhetoric Miner) found that several
+      speeches resist their algorithmic categories: Lincoln's <em>Second Inaugural</em> is tagged
+      &ldquo;religion-morality&rdquo; but functions primarily as a meditation on national guilt and reconciliation
+      &mdash; a distinction no keyword count captures. The charts here are a map, not the territory.
+    </div>
+  </main>
+</div>
+
+<script>
+// Historical events to mark on the timeline
+const EVENTS = [
+  { date: "1820-01-01", label: "Missouri Compromise" },
+  { date: "1846-05-13", label: "Mexican-American War begins" },
+  { date: "1850-09-18", label: "Compromise of 1850" },
+  { date: "1854-05-30", label: "Kansas-Nebraska Act" },
+  { date: "1857-03-06", label: "Dred Scott decision" },
+  { date: "1859-10-16", label: "John Brown's raid" },
+  { date: "1861-02-04", label: "Confederate States formed" },
+  { date: "1861-04-12", label: "Fort Sumter — Civil War begins" },
+  { date: "1862-09-22", label: "Preliminary Emancipation Proclamation" },
+  { date: "1863-01-01", label: "Emancipation Proclamation" },
+  { date: "1863-07-04", label: "Gettysburg / Vicksburg" },
+  { date: "1864-11-08", label: "Lincoln re-elected" },
+  { date: "1865-04-09", label: "Lee surrenders" },
+  { date: "1865-04-14", label: "Lincoln assassinated" },
+];
+
+const THEME_COLORS = {
+  "slavery": "#c97aff",
+  "emancipation": "#4aff9e",
+  "war-policy": "#ff6b4a",
+  "national-unity": "#4a9eff",
+  "economy": "#ffcc44",
+  "religion-morality": "#ff9d6a",
+  "constitutional-law": "#80d4ff",
+  "partisan-politics": "#ff7eb3",
+  "territorial-expansion": "#a8ff78",
+  "general": "#888"
+};
+
+const ERA_COLORS = { "pre-war": "#4a9eff", "wartime": "#ff6b4a", "post-war": "#4aff9e" };
+
+let speeches = [];
+let activeFilter = { type: "era", val: "all" };
+
+async function init() {
+  const resp = await fetch("../data/speeches.json");
+  speeches = await resp.json();
+  render();
+  setupFilters();
+}
+
+function dateToNum(d) {
+  return new Date(d).getTime();
+}
+
+function getVisibleSpeeches() {
+  if (activeFilter.type === "era" && activeFilter.val === "all") return speeches;
+  if (activeFilter.type === "era") return speeches.filter(s => s.era === activeFilter.val);
+  if (activeFilter.type === "theme") return speeches.filter(s => s.themes.includes(activeFilter.val));
+  return speeches;
+}
+
+function render() {
+  const container = document.getElementById("timeline-container");
+  const width = container.clientWidth - 10;
+
+  const minDate = new Date("1831-01-01").getTime();
+  const maxDate = new Date("1866-01-01").getTime();
+  const range = maxDate - minDate;
+
+  function xPos(dateStr) {
+    const t = new Date(dateStr).getTime();
+    return ((t - minDate) / range) * width;
+  }
+
+  const visible = new Set(getVisibleSpeeches().map(s => s.id));
+
+  // Year axis
+  const axis = document.getElementById("year-axis");
+  axis.innerHTML = "";
+  for (let y = 1832; y <= 1865; y += 2) {
+    const d = document.createElement("div");
+    d.className = "year-tick";
+    d.style.left = xPos(`${y}-01-01`) + "px";
+    d.textContent = y;
+    axis.appendChild(d);
+  }
+
+  // Speech dots — stack vertically by proximity
+  const dotsEl = document.getElementById("speech-dots");
+  dotsEl.innerHTML = "";
+
+  // Simple vertical stacking to avoid overlap
+  const cols = [];
+  speeches.forEach(s => {
+    const x = xPos(s.date);
+    let row = 0;
+    while (cols[row] !== undefined && Math.abs(cols[row] - x) < 8) row++;
+    cols[row] = x;
+    const y = 10 + row * 14;
+
+    const dot = document.createElement("div");
+    dot.className = "speech-dot" + (s.notable ? " notable" : "") + (visible.has(s.id) ? "" : " dimmed");
+    dot.style.left = x + "px";
+    dot.style.top = y + "px";
+    dot.style.background = ERA_COLORS[s.era];
+    dot.dataset.id = s.id;
+    dot.addEventListener("mousemove", e => showTooltip(e, s));
+    dot.addEventListener("mouseleave", hideTooltip);
+    dot.addEventListener("click", () => showDetail(s));
+    dotsEl.appendChild(dot);
+  });
+
+  // Era labels
+  const eraEl = document.getElementById("era-labels");
+  eraEl.innerHTML = "";
+  const eraRanges = [
+    { label: "Pre-War", start: "1832-01-01", end: "1861-01-01", color: ERA_COLORS["pre-war"] },
+    { label: "Wartime", start: "1861-01-01", end: "1865-04-09", color: ERA_COLORS["wartime"] },
+    { label: "Post-War", start: "1865-04-09", end: "1866-01-01", color: ERA_COLORS["post-war"] },
+  ];
+  eraRanges.forEach(er => {
+    const lbl = document.createElement("div");
+    lbl.className = "era-label";
+    lbl.style.left = (xPos(er.start) + 4) + "px";
+    lbl.style.color = er.color;
+    lbl.textContent = er.label;
+    eraEl.appendChild(lbl);
+
+    const bar = document.createElement("div");
+    bar.style.position = "absolute";
+    bar.style.left = xPos(er.start) + "px";
+    bar.style.width = (xPos(er.end) - xPos(er.start)) + "px";
+    bar.style.top = "0"; bar.style.height = "3px";
+    bar.style.background = er.color;
+    bar.style.opacity = "0.4";
+    eraEl.appendChild(bar);
+  });
+
+  // Event markers — only render a selection to avoid clutter
+  EVENTS.forEach(ev => {
+    const x = xPos(ev.date);
+    if (x < 0 || x > width) return;
+    const marker = document.createElement("div");
+    marker.className = "event-marker";
+    marker.style.left = x + "px";
+    marker.style.height = (dotsEl.offsetHeight + 20) + "px";
+    marker.style.top = "36px";
+    marker.style.position = "absolute";
+    marker.style.zIndex = "2";
+    const lbl = document.createElement("div");
+    lbl.className = "event-label";
+    lbl.textContent = ev.label;
+    marker.appendChild(lbl);
+    document.getElementById("timeline-container").appendChild(marker);
+  });
+
+  // Word count bars
+  const wcEl = document.getElementById("wc-chart");
+  wcEl.innerHTML = "";
+  const maxWC = Math.max(...speeches.map(s => s.wordCount));
+  speeches.forEach(s => {
+    const bar = document.createElement("div");
+    bar.className = "wc-bar" + (visible.has(s.id) ? "" : " dimmed");
+    const h = Math.max(2, (s.wordCount / maxWC) * 76);
+    bar.style.left = xPos(s.date) + "px";
+    bar.style.height = h + "px";
+    bar.style.background = ERA_COLORS[s.era];
+    bar.addEventListener("mousemove", e => showTooltip(e, s));
+    bar.addEventListener("mouseleave", hideTooltip);
+    bar.addEventListener("click", () => showDetail(s));
+    wcEl.appendChild(bar);
+  });
+
+  // FK dots
+  const fkEl = document.getElementById("fk-chart");
+  fkEl.innerHTML = "";
+  const fkSpeeches = speeches.filter(s => s.fleschKincaidGrade !== null);
+  const maxFK = 22, minFK = 4;
+  fkSpeeches.forEach(s => {
+    const d = document.createElement("div");
+    d.className = "fk-dot" + (visible.has(s.id) ? "" : " dimmed");
+    const y = 52 - ((s.fleschKincaidGrade - minFK) / (maxFK - minFK)) * 52;
+    d.style.left = xPos(s.date) + "px";
+    d.style.top = Math.max(0, y) + "px";
+    d.style.background = ERA_COLORS[s.era];
+    d.addEventListener("mousemove", e => showTooltip(e, s));
+    d.addEventListener("mouseleave", hideTooltip);
+    d.addEventListener("click", () => showDetail(s));
+    fkEl.appendChild(d);
+  });
+
+  // Theme strip
+  const themeEl = document.getElementById("theme-strip");
+  themeEl.innerHTML = "";
+  const themes = ["slavery","emancipation","war-policy","national-unity","economy","religion-morality","constitutional-law","partisan-politics","territorial-expansion"];
+  themes.forEach(theme => {
+    const row = document.createElement("div");
+    row.className = "theme-row";
+    const lbl = document.createElement("div");
+    lbl.className = "theme-row-label";
+    lbl.textContent = theme.replace(/-/g, " ");
+    row.appendChild(lbl);
+    const track = document.createElement("div");
+    track.className = "theme-row-track";
+    speeches.filter(s => s.themes.includes(theme)).forEach(s => {
+      const pip = document.createElement("div");
+      pip.className = "theme-pip" + (visible.has(s.id) ? "" : " dimmed");
+      const trackWidth = width - 130;
+      pip.style.left = ((xPos(s.date) / width) * trackWidth) + "px";
+      pip.style.background = THEME_COLORS[theme];
+      pip.addEventListener("mousemove", e => showTooltip(e, s));
+      pip.addEventListener("mouseleave", hideTooltip);
+      pip.addEventListener("click", () => showDetail(s));
+      track.appendChild(pip);
+    });
+    row.appendChild(track);
+    themeEl.appendChild(row);
+  });
+
+  updateStats();
+}
+
+function updateStats() {
+  const vis = getVisibleSpeeches();
+  document.getElementById("stat-count").textContent = vis.length;
+  if (vis.length === 0) {
+    document.getElementById("stat-wc").textContent = "—";
+    document.getElementById("stat-fk").textContent = "—";
+    return;
+  }
+  const avgWC = Math.round(vis.reduce((a,b) => a + b.wordCount, 0) / vis.length);
+  document.getElementById("stat-wc").textContent = avgWC.toLocaleString();
+  const fkList = vis.filter(s => s.fleschKincaidGrade !== null);
+  if (fkList.length) {
+    const avgFK = (fkList.reduce((a,b) => a + b.fleschKincaidGrade, 0) / fkList.length).toFixed(1);
+    document.getElementById("stat-fk").textContent = avgFK;
+  }
+}
+
+function showTooltip(e, s) {
+  const tt = document.getElementById("tooltip");
+  const eraClass = s.era === "pre-war" ? "era-pre" : s.era === "wartime" ? "era-wartime" : "era-post";
+  tt.innerHTML = `
+    <h4>${s.title}</h4>
+    <div class="tt-date">${s.displayDate} &mdash; <span class="era-tag ${eraClass}">${s.era}</span></div>
+    <div class="tt-stat">Audience: <span>${s.audience}</span></div>
+    <div class="tt-stat">Words: <span>${s.wordCount.toLocaleString()}</span></div>
+    ${s.fleschKincaidGrade !== null ? `<div class="tt-stat">Grade level: <span>${s.fleschKincaidGrade}</span></div>` : ""}
+    <div class="tt-tags">${s.themes.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+  `;
+  tt.style.display = "block";
+  positionTooltip(e, tt);
+}
+
+function positionTooltip(e, tt) {
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + 310 > window.innerWidth) x = e.clientX - 320;
+  if (y + 200 > window.innerHeight) y = e.clientY - 160;
+  tt.style.left = x + "px";
+  tt.style.top = y + "px";
+}
+
+function hideTooltip() {
+  document.getElementById("tooltip").style.display = "none";
+}
+
+function showDetail(s) {
+  const panel = document.getElementById("detail-panel");
+  const eraClass = s.era === "pre-war" ? "era-pre" : s.era === "wartime" ? "era-wartime" : "era-post";
+  document.getElementById("dp-title").textContent = s.title;
+  document.getElementById("dp-meta").innerHTML = `
+    <span>${s.displayDate}</span>
+    <span class="era-tag ${eraClass}">${s.era}</span>
+    <span>Audience: ${s.audience}</span>
+    <span>${s.wordCount.toLocaleString()} words</span>
+    ${s.fleschKincaidGrade !== null ? `<span>Grade ${s.fleschKincaidGrade}</span>` : ""}
+    ${s.notable ? `<span style="color:var(--accent-light)">&#9733; Landmark speech</span>` : ""}
+  `;
+  // First 500 chars of text as excerpt
+  const excerpt = s.text.slice(0, 600) + (s.text.length > 600 ? "…" : "");
+  document.getElementById("dp-excerpt").textContent = excerpt;
+  panel.style.display = "block";
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function setupFilters() {
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = { type: btn.dataset.filter, val: btn.dataset.val };
+      // Clear event markers before re-render
+      document.querySelectorAll(".event-marker").forEach(m => m.remove());
+      render();
+    });
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    activeFilter = { type: "era", val: "all" };
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    document.querySelector('[data-val="all"]').classList.add("active");
+    document.querySelectorAll(".event-marker").forEach(m => m.remove());
+    render();
+  });
+
+  document.getElementById("close-detail").addEventListener("click", () => {
+    document.getElementById("detail-panel").style.display = "none";
+  });
+
+  window.addEventListener("resize", () => {
+    document.querySelectorAll(".event-marker").forEach(m => m.remove());
+    render();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
