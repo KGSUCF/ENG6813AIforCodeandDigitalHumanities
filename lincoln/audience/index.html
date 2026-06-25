@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln's Audience Targeting</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #252836;
+  --border: #2e3148;
+  --text: #e8e9f0;
+  --muted: #8b8fa8;
+  --accent: #c9a84c;
+  --accent-light: #f0c96a;
+  --pre: #4a9eff;
+  --war: #ff6b4a;
+  --post: #4aff9e;
+
+  --c-congress: #80d4ff;
+  --c-public: #c97aff;
+  --c-rally: #ffcc44;
+  --c-military: #ff6b4a;
+  --c-civic: #4aff9e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.8rem 2rem 1.2rem;
+}
+header h1 { font-size: 1.5rem; color: var(--accent-light); margin-bottom: 0.3rem; }
+header p { color: var(--muted); font-size: 0.88rem; font-family: sans-serif; }
+nav.bc { font-family: sans-serif; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+nav.bc a { color: var(--accent); text-decoration: none; }
+
+.tabs {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border); padding: 0 1.5rem; gap: 0.2rem;
+}
+.tab {
+  font-family: sans-serif; font-size: 0.82rem;
+  padding: 0.7rem 1.2rem; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+
+.panel { display: none; padding: 1.5rem 2rem 3rem; max-width: 1200px; }
+.panel.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.2rem; margin-bottom: 1.2rem;
+}
+.card h3 {
+  font-family: sans-serif; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 1rem;
+}
+
+/* ── AUDIENCE COMPARISON GRID ── */
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem; margin-bottom: 1.5rem;
+}
+.audience-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1rem;
+  border-top: 3px solid var(--border);
+  cursor: pointer; transition: border-color 0.15s;
+}
+.audience-card:hover { border-top-color: var(--accent); }
+.audience-card.active { border-top-color: var(--accent-light); }
+.ac-name {
+  font-family: sans-serif; font-size: 0.8rem; font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+.ac-count { font-family: sans-serif; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.8rem; }
+.ac-stat { font-family: sans-serif; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.3rem; }
+.ac-stat span { color: var(--text); }
+
+/* ── BAR ROWS ── */
+.bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.bar-label { font-family: sans-serif; font-size: 0.75rem; color: var(--text); width: 160px; flex-shrink: 0; }
+.bar-label.wide { width: 200px; }
+.bar-track { flex: 1; background: var(--border); height: 10px; border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-num { font-family: sans-serif; font-size: 0.72rem; color: var(--muted); width: 36px; text-align: right; }
+
+/* ── RADAR / SPIDER ── */
+#radar-canvas { display: block; margin: 0 auto; }
+
+/* ── COMPARISON TABLE ── */
+.compare-table {
+  width: 100%; border-collapse: collapse;
+  font-family: sans-serif; font-size: 0.8rem;
+}
+.compare-table th {
+  text-align: left; padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+}
+.compare-table td {
+  padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td { background: var(--surface2); }
+.best { color: var(--accent-light); font-weight: bold; }
+
+/* ── PRONOUN CHART ── */
+.pronoun-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+@media (max-width: 640px) { .pronoun-grid { grid-template-columns: 1fr; } }
+
+/* ── SPEECH LIST ── */
+.speech-list-small {
+  max-height: 320px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 4px;
+}
+.sls-item {
+  padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border);
+  font-family: sans-serif; font-size: 0.78rem; cursor: pointer;
+  transition: background 0.1s;
+}
+.sls-item:hover { background: var(--surface2); }
+.sls-item:last-child { border-bottom: none; }
+.sls-title { color: var(--text); }
+.sls-meta { color: var(--muted); font-size: 0.7rem; margin-top: 2px; }
+
+/* ── SCATTER ── */
+#scatter-canvas { display: block; width: 100%; cursor: crosshair; }
+
+/* ── INSIGHT BOXES ── */
+.insight {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0;
+  padding: 0.9rem 1.1rem; margin-top: 1rem;
+  font-family: sans-serif; font-size: 0.82rem; line-height: 1.65; color: var(--text);
+}
+.insight strong { color: var(--accent-light); }
+
+.era-badge {
+  display: inline-block; padding: 1px 6px; border-radius: 10px;
+  font-size: 0.68rem; font-family: sans-serif;
+}
+.eb-pre { background: rgba(74,158,255,.15); color: var(--pre); border: 1px solid var(--pre); }
+.eb-war { background: rgba(255,107,74,.15); color: var(--war); border: 1px solid var(--war); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+.method-note {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
+  padding: 1rem 1.2rem; margin-top: 2rem;
+  font-family: sans-serif; font-size: 0.82rem; line-height: 1.65; color: var(--muted);
+}
+.method-note strong { color: var(--accent-light); }
+
+/* tooltip */
+#tooltip {
+  position: fixed; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 5px; padding: 0.7rem 0.9rem; pointer-events: none;
+  z-index: 1000; display: none; font-family: sans-serif; font-size: 0.78rem;
+  max-width: 260px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+#tooltip h4 { color: var(--accent-light); font-size: 0.82rem; margin-bottom: 0.3rem; font-family: Georgia; }
+#tooltip .tt-m { color: var(--muted); font-size: 0.72rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="bc"><a href="../../index.html">Lincoln Project</a> &rsaquo; Audience Targeting</nav>
+  <h1>Lincoln's Audience Targeting</h1>
+  <p>How Lincoln adapted his language, complexity, and tone for Congress, the public, political rallies, and soldiers</p>
+</header>
+
+<div id="tooltip"></div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">Audience Comparison</div>
+  <div class="tab" data-tab="scatter">Complexity vs. Audience</div>
+  <div class="tab" data-tab="pronouns">Pronoun Strategy</div>
+  <div class="tab" data-tab="speeches">Browse by Audience</div>
+</div>
+
+<!-- TAB 1: OVERVIEW -->
+<div class="panel active" id="panel-overview">
+
+  <div class="audience-grid" id="audience-cards"></div>
+
+  <div class="card">
+    <h3>Key Metrics by Audience Type</h3>
+    <div style="overflow-x:auto">
+      <table class="compare-table" id="compare-table"></table>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Average Sentence Length (words)</h3>
+      <div id="sent-bars"></div>
+      <div class="insight">
+        <strong>Soldiers vs. Congress:</strong> Lincoln's speeches to soldiers averaged 21.8 words per sentence —
+        roughly half the length of his addresses to the general public (40.8). For men about to return to battle,
+        he stripped language to its core. Congressional messages, by contrast, built long sentences because
+        they were written to be read, not heard, and needed legal precision.
+      </div>
+    </div>
+    <div class="card">
+      <h3>Vocabulary Richness (type-token ratio)</h3>
+      <div id="vocab-bars"></div>
+      <div class="insight">
+        <strong>What richness measures:</strong> Type-token ratio = unique words ÷ total words in the first 500.
+        A higher score means less repetition. Lincoln's scores are remarkably consistent across audience types,
+        suggesting his vocabulary range didn't change much — what changed was sentence structure and formality.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Reading Level (Flesch-Kincaid Grade) by Audience</h3>
+    <div id="fk-bars"></div>
+    <div class="insight">
+      <strong>A note on these scores:</strong> FK grade reflects sentence length and syllable count — not
+      clarity or accessibility. Speeches to soldiers score lowest (9.1) because they are short and direct.
+      Speeches to the general public score highest (14.4) largely because ceremonial addresses like the
+      Gettysburg Address and both Inaugurals use long, complex sentences that are architecturally deliberate,
+      not accidentally difficult. See the <a href="../timeline/" style="color:var(--accent)">Metadata Timeline</a>
+      for a fuller discussion of FK limitations with 19th-century oratory.
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB 2: SCATTER -->
+<div class="panel" id="panel-scatter">
+  <div class="card">
+    <h3>Sentence Length vs. Reading Level — Each Speech</h3>
+    <canvas id="scatter-canvas" height="420"></canvas>
+    <div class="insight" style="margin-top:1rem">
+      Each dot is one speech, colored by audience type. Hover for details.
+      The cluster of military speeches (orange) in the lower-left — short sentences, lower FK —
+      is visually distinct from the spread of Congressional messages (blue) in the upper-right.
+      Political rally speeches (yellow) cluster in the middle, confirming Lincoln's
+      middle-register approach to campaign audiences.
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: PRONOUNS -->
+<div class="panel" id="panel-pronouns">
+
+  <div class="card">
+    <h3>Pronoun Use by Audience (per 1,000 words)</h3>
+    <p style="font-family:sans-serif;font-size:0.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+      Pronoun choice is one of the most reliable signals of how a speaker positions themselves relative to
+      an audience. &ldquo;We/our&rdquo; signals solidarity and shared identity. &ldquo;You/your&rdquo; directly
+      addresses the listener. &ldquo;I&rdquo; foregrounds the speaker's individual authority or experience.
+      &ldquo;They/their&rdquo; defines an out-group.
+    </p>
+    <div class="pronoun-grid" id="pronoun-charts"></div>
+  </div>
+
+  <div class="card">
+    <h3>The Pronoun Shift at Gettysburg</h3>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text);margin-bottom:0.8rem">
+      The Gettysburg Address is an outlier in every pronoun category. With <strong style="color:var(--accent-light)">we/our = 55.1</strong>
+      per thousand words and <strong style="color:var(--accent-light)">I = 0.0</strong>, it is Lincoln's most
+      collectively-voiced speech in the entire corpus. He addresses a crowd of thousands on a battlefield
+      where 51,000 men had become casualties four months earlier, and he uses the word &ldquo;I&rdquo; not once.
+    </p>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text);margin-bottom:0.8rem">
+      Compare this to his speeches to soldiers, where &ldquo;I&rdquo; averages 22.9 per thousand — the highest
+      of any audience type. When addressing troops directly, Lincoln spoke personally and informally,
+      often expressing his own feelings about the war. At Gettysburg, speaking to a national public
+      audience in a ceremonial register, he erased himself entirely.
+    </p>
+    <p style="font-family:sans-serif;font-size:0.85rem;line-height:1.7;color:var(--text)">
+      The Second Inaugural shows the same instinct at the war's close: &ldquo;they&rdquo; drops to 2.8 (its lowest
+      in any major speech), and &ldquo;I&rdquo; nearly disappears at 1.4. By 1865, Lincoln had stopped
+      naming enemies and stopped foregrounding himself. The grammar of the speech enacts its argument
+      about national reconciliation before a word of the argument is made.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Pronoun Strategy Across Eras</h3>
+    <canvas id="era-pronoun-canvas" height="180"></canvas>
+  </div>
+
+</div>
+
+<!-- TAB 4: BROWSE -->
+<div class="panel" id="panel-speeches">
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem" id="aud-filter-btns"></div>
+  <div class="two-col">
+    <div>
+      <div class="speech-list-small" id="browse-list"></div>
+    </div>
+    <div id="browse-detail">
+      <p style="color:var(--muted);font-family:sans-serif;font-size:0.85rem">Select a speech to see its audience profile.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const AUD_COLORS = {
+  "Congress": "#80d4ff",
+  "General Public": "#c97aff",
+  "Political Rally": "#ffcc44",
+  "Military/Soldiers": "#ff6b4a",
+  "Civic Organization": "#4aff9e",
+};
+
+const METRICS = [
+  { key: "fleschKincaidGrade", label: "FK Grade", fmt: v => v != null ? v.toFixed(1) : "—" },
+  { key: "avgSentenceLength", label: "Avg Sentence (words)", fmt: v => v.toFixed(1) },
+  { key: "avgWordLength", label: "Avg Word Length", fmt: v => v.toFixed(2) },
+  { key: "vocabRichness", label: "Vocab Richness", fmt: v => v.toFixed(3) },
+];
+
+let data = [];
+let activeAud = "all";
+
+async function init() {
+  const resp = await fetch("../data/audience.json");
+  data = await resp.json();
+  buildOverview();
+  buildScatter();
+  buildPronouns();
+  buildBrowse();
+  setupTabs();
+}
+
+function groupBy(arr, key) {
+  const out = {};
+  arr.forEach(s => {
+    const k = s[key];
+    if (!out[k]) out[k] = [];
+    out[k].push(s);
+  });
+  return out;
+}
+
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+function buildOverview() {
+  const byAud = groupBy(data, "audience");
+  const audOrder = ["General Public","Political Rally","Congress","Military/Soldiers","Civic Organization"];
+
+  // Audience cards
+  const cardsEl = document.getElementById("audience-cards");
+  audOrder.forEach(aud => {
+    const group = byAud[aud] || [];
+    if (!group.length) return;
+    const fks = group.filter(s=>s.fleschKincaidGrade).map(s=>s.fleschKincaidGrade);
+    const div = document.createElement("div");
+    div.className = "audience-card";
+    div.style.borderTopColor = AUD_COLORS[aud];
+    div.innerHTML = `
+      <div class="ac-name" style="color:${AUD_COLORS[aud]}">${aud}</div>
+      <div class="ac-count">${group.length} speeches</div>
+      <div class="ac-stat">Avg FK grade: <span>${fks.length ? avg(fks).toFixed(1) : "—"}</span></div>
+      <div class="ac-stat">Avg sentence: <span>${avg(group.map(s=>s.avgSentenceLength)).toFixed(1)} words</span></div>
+      <div class="ac-stat">Avg word length: <span>${avg(group.map(s=>s.avgWordLength)).toFixed(2)} chars</span></div>
+      <div class="ac-stat">We/our rate: <span>${avg(group.map(s=>s.pronouns.we)).toFixed(1)}/1k</span></div>
+    `;
+    cardsEl.appendChild(div);
+  });
+
+  // Compare table
+  const table = document.getElementById("compare-table");
+  const cols = ["Audience","N","FK Grade","Avg Sent Len","Avg Word Len","Vocab Richness","We/Our","You/Your","I","They/Them"];
+  table.innerHTML = `<tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr>`;
+  const allMetrics = audOrder.map(aud => {
+    const g = byAud[aud] || [];
+    const fks = g.filter(s=>s.fleschKincaidGrade).map(s=>s.fleschKincaidGrade);
+    return {
+      aud, n: g.length,
+      fk: fks.length ? avg(fks) : null,
+      asl: avg(g.map(s=>s.avgSentenceLength)),
+      awl: avg(g.map(s=>s.avgWordLength)),
+      vr: avg(g.map(s=>s.vocabRichness)),
+      we: avg(g.map(s=>s.pronouns.we)),
+      you: avg(g.map(s=>s.pronouns.you)),
+      i: avg(g.map(s=>s.pronouns.i)),
+      they: avg(g.map(s=>s.pronouns.they)),
+    };
+  }).filter(m=>m.n>0);
+
+  // Find best (lowest FK, lowest sent len = clearest)
+  const minFK = Math.min(...allMetrics.filter(m=>m.fk).map(m=>m.fk));
+  const minSent = Math.min(...allMetrics.map(m=>m.asl));
+  const maxWe = Math.max(...allMetrics.map(m=>m.we));
+
+  allMetrics.forEach(m => {
+    table.innerHTML += `<tr>
+      <td style="color:${AUD_COLORS[m.aud]||'#888'};font-weight:bold">${m.aud}</td>
+      <td>${m.n}</td>
+      <td class="${m.fk===minFK?'best':''}">${m.fk?m.fk.toFixed(1):"—"}</td>
+      <td class="${m.asl===minSent?'best':''}">${m.asl.toFixed(1)}</td>
+      <td>${m.awl.toFixed(2)}</td>
+      <td>${m.vr.toFixed(3)}</td>
+      <td class="${m.we===maxWe?'best':''}">${m.we.toFixed(1)}</td>
+      <td>${m.you.toFixed(1)}</td>
+      <td>${m.i.toFixed(1)}</td>
+      <td>${m.they.toFixed(1)}</td>
+    </tr>`;
+  });
+  table.innerHTML += `<tr style="font-size:0.68rem;color:var(--muted)">
+    <td colspan="10" style="padding-top:0.5rem">
+      <strong style="color:var(--accent-light)">Highlighted</strong> values = lowest (clearest) or highest (most collective) in column.
+    </td></tr>`;
+
+  // Sentence bars
+  const sentEl = document.getElementById("sent-bars");
+  const maxSent = Math.max(...allMetrics.map(m=>m.asl));
+  allMetrics.forEach(m => {
+    sentEl.innerHTML += `<div class="bar-row">
+      <div class="bar-label wide" style="color:${AUD_COLORS[m.aud]}">${m.aud}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(m.asl/maxSent*100).toFixed(1)}%;background:${AUD_COLORS[m.aud]}"></div></div>
+      <div class="bar-num">${m.asl.toFixed(1)}</div>
+    </div>`;
+  });
+
+  // Vocab bars
+  const vocabEl = document.getElementById("vocab-bars");
+  const maxVR = Math.max(...allMetrics.map(m=>m.vr));
+  allMetrics.forEach(m => {
+    vocabEl.innerHTML += `<div class="bar-row">
+      <div class="bar-label wide" style="color:${AUD_COLORS[m.aud]}">${m.aud}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(m.vr/maxVR*100).toFixed(1)}%;background:${AUD_COLORS[m.aud]}"></div></div>
+      <div class="bar-num">${m.vr.toFixed(3)}</div>
+    </div>`;
+  });
+
+  // FK bars
+  const fkEl = document.getElementById("fk-bars");
+  const maxFK2 = Math.max(...allMetrics.filter(m=>m.fk).map(m=>m.fk));
+  allMetrics.filter(m=>m.fk).forEach(m => {
+    fkEl.innerHTML += `<div class="bar-row">
+      <div class="bar-label wide" style="color:${AUD_COLORS[m.aud]}">${m.aud}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(m.fk/maxFK2*100).toFixed(1)}%;background:${AUD_COLORS[m.aud]}"></div></div>
+      <div class="bar-num">${m.fk.toFixed(1)}</div>
+    </div>`;
+  });
+}
+
+function buildScatter() {
+  const canvas = document.getElementById("scatter-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 420;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const pad = { top: 20, right: 20, bottom: 50, left: 55 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  const validData = data.filter(s => s.fleschKincaidGrade && s.avgSentenceLength > 0);
+  const maxX = Math.max(...validData.map(s=>s.avgSentenceLength)) * 1.05;
+  const maxY = Math.max(...validData.map(s=>s.fleschKincaidGrade)) * 1.05;
+  const minX = 0, minY = 0;
+
+  function toCanvas(x, y) {
+    return {
+      cx: pad.left + ((x - minX) / (maxX - minX)) * plotW,
+      cy: pad.top + plotH - ((y - minY) / (maxY - minY)) * plotH
+    };
+  }
+
+  // Grid
+  ctx.strokeStyle = "#2e3148";
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx <= maxX; gx += 10) {
+    const {cx} = toCanvas(gx, 0);
+    ctx.beginPath(); ctx.moveTo(cx, pad.top); ctx.lineTo(cx, pad.top + plotH); ctx.stroke();
+    ctx.fillStyle = "#8b8fa8"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(gx, cx, pad.top + plotH + 16);
+  }
+  for (let gy = 0; gy <= 22; gy += 2) {
+    const {cy} = toCanvas(0, gy);
+    ctx.beginPath(); ctx.moveTo(pad.left, cy); ctx.lineTo(pad.left + plotW, cy); ctx.stroke();
+    ctx.fillStyle = "#8b8fa8"; ctx.textAlign = "right";
+    ctx.fillText(gy, pad.left - 6, cy + 4);
+  }
+
+  // Axis labels
+  ctx.fillStyle = "#8b8fa8"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText("Average Sentence Length (words)", pad.left + plotW/2, H - 8);
+  ctx.save(); ctx.translate(14, pad.top + plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText("FK Grade Level", 0, 0); ctx.restore();
+
+  // Dots
+  const dots = [];
+  validData.forEach(s => {
+    const {cx, cy} = toCanvas(s.avgSentenceLength, s.fleschKincaidGrade);
+    const color = AUD_COLORS[s.audience] || "#888";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI*2);
+    ctx.fillStyle = color + "aa";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.fill(); ctx.stroke();
+    dots.push({ s, cx, cy });
+  });
+
+  // Legend
+  const auds = Object.keys(AUD_COLORS);
+  let lx = pad.left;
+  auds.forEach(a => {
+    ctx.fillStyle = AUD_COLORS[a];
+    ctx.fillRect(lx, H - 32, 10, 10);
+    ctx.fillStyle = "#8b8fa8"; ctx.font = "10px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText(a, lx + 14, H - 23);
+    lx += ctx.measureText(a).width + 30;
+  });
+
+  // Tooltip
+  const tt = document.getElementById("tooltip");
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let closest = null, minD = 12;
+    dots.forEach(d => {
+      const dist = Math.hypot(d.cx - mx, d.cy - my);
+      if (dist < minD) { minD = dist; closest = d; }
+    });
+    if (closest) {
+      const s = closest.s;
+      const eraClass = s.era === "pre-war" ? "eb-pre" : "eb-war";
+      tt.innerHTML = `<h4>${s.title}</h4>
+        <div class="tt-m">${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span></div>
+        <div class="tt-m" style="margin-top:4px">Audience: <strong style="color:${AUD_COLORS[s.audience]}">${s.audience}</strong></div>
+        <div class="tt-m">Avg sentence: ${s.avgSentenceLength} words &bull; FK: ${s.fleschKincaidGrade}</div>`;
+      tt.style.display = "block";
+      let tx = e.clientX + 14, ty = e.clientY + 14;
+      if (tx + 270 > window.innerWidth) tx = e.clientX - 280;
+      if (ty + 140 > window.innerHeight) ty = e.clientY - 130;
+      tt.style.left = tx + "px"; tt.style.top = ty + "px";
+    } else {
+      tt.style.display = "none";
+    }
+  });
+  canvas.addEventListener("mouseleave", () => { tt.style.display = "none"; });
+}
+
+function buildPronouns() {
+  const byAud = groupBy(data, "audience");
+  const audOrder = ["General Public","Political Rally","Congress","Military/Soldiers","Civic Organization"];
+  const pronounKeys = ["we","you","i","they"];
+  const pronounColors = {"we":"#4a9eff","you":"#ffcc44","i":"#c97aff","they":"#ff6b4a"};
+  const pronounLabels = {"we":"We/Our","you":"You/Your","i":"I","they":"They/Them"};
+
+  const grid = document.getElementById("pronoun-charts");
+
+  pronounKeys.forEach(pk => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h3>${pronounLabels[pk]} — per 1,000 words by audience</h3>`;
+    const maxVal = Math.max(...audOrder.map(a => {
+      const g = byAud[a]||[];
+      return g.length ? g.reduce((s,x)=>s+x.pronouns[pk],0)/g.length : 0;
+    }));
+    audOrder.forEach(aud => {
+      const g = byAud[aud]||[];
+      if (!g.length) return;
+      const val = g.reduce((s,x)=>s+x.pronouns[pk],0)/g.length;
+      card.innerHTML += `<div class="bar-row">
+        <div class="bar-label wide" style="color:${AUD_COLORS[aud]};font-size:0.73rem">${aud}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(val/maxVal*100).toFixed(1)}%;background:${pronounColors[pk]}"></div></div>
+        <div class="bar-num">${val.toFixed(1)}</div>
+      </div>`;
+    });
+    grid.appendChild(card);
+  });
+
+  // Era pronoun canvas
+  const canvas = document.getElementById("era-pronoun-canvas");
+  const W = canvas.parentElement.clientWidth - 40;
+  canvas.width = W; canvas.height = 180;
+  const ctx = canvas.getContext("2d");
+  const eras = ["pre-war","wartime","post-war"];
+  const byEra = groupBy(data, "era");
+
+  const barW = 30, groupGap = 60, startX = 60;
+  const maxVal2 = 16;
+
+  eras.forEach((era, ei) => {
+    const g = byEra[era] || [];
+    if (!g.length) return;
+    const gx = startX + ei * (pronounKeys.length * (barW+4) + groupGap);
+
+    pronounKeys.forEach((pk, pi) => {
+      const val = g.reduce((s,x)=>s+x.pronouns[pk],0)/g.length;
+      const barH = (val / maxVal2) * 120;
+      const bx = gx + pi * (barW+4);
+      const by = 140 - barH;
+      ctx.fillStyle = pronounColors[pk] + "cc";
+      ctx.fillRect(bx, by, barW, barH);
+      ctx.fillStyle = "#8b8fa8"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(val.toFixed(1), bx + barW/2, by - 3);
+    });
+
+    const eraColor = era === "pre-war" ? "#4a9eff" : era === "wartime" ? "#ff6b4a" : "#4aff9e";
+    ctx.fillStyle = eraColor; ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center";
+    const groupCenter = gx + (pronounKeys.length * (barW+4)) / 2;
+    ctx.fillText(era.replace("-"," "), groupCenter, 160);
+    ctx.fillStyle = "#8b8fa8"; ctx.font = "10px sans-serif";
+    ctx.fillText(`(n=${g.length})`, groupCenter, 173);
+  });
+
+  // Legend
+  let lx = startX;
+  pronounKeys.forEach(pk => {
+    ctx.fillStyle = pronounColors[pk];
+    ctx.fillRect(lx, 5, 10, 10);
+    ctx.fillStyle = "#8b8fa8"; ctx.font = "10px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText(pronounLabels[pk], lx + 13, 14);
+    lx += 75;
+  });
+}
+
+function buildBrowse() {
+  const auds = ["All", ...Object.keys(AUD_COLORS)];
+  const btnBar = document.getElementById("aud-filter-btns");
+  auds.forEach(a => {
+    const btn = document.createElement("button");
+    btn.textContent = a;
+    btn.style.cssText = `background:var(--surface2);border:1px solid var(--border);
+      color:${a==="All"?"var(--text)":AUD_COLORS[a]||"var(--muted)"};
+      font-family:sans-serif;font-size:0.78rem;padding:0.3rem 0.9rem;
+      border-radius:12px;cursor:pointer;`;
+    if (a === "All") btn.style.borderColor = "var(--accent)";
+    btn.addEventListener("click", () => {
+      activeAud = a === "All" ? "all" : a;
+      document.querySelectorAll("#aud-filter-btns button").forEach(b => b.style.borderColor = "var(--border)");
+      btn.style.borderColor = a==="All"?"var(--accent)":(AUD_COLORS[a]||"var(--accent)");
+      populateBrowseList();
+    });
+    btnBar.appendChild(btn);
+  });
+  populateBrowseList();
+}
+
+function populateBrowseList() {
+  const list = document.getElementById("browse-list");
+  const filtered = activeAud === "all" ? data : data.filter(s=>s.audience===activeAud);
+  list.innerHTML = "";
+  filtered.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "sls-item";
+    div.innerHTML = `<div class="sls-title">${s.title}</div>
+      <div class="sls-meta">${s.displayDate} &bull; ${s.wordCount.toLocaleString()} words &bull;
+        <span style="color:${AUD_COLORS[s.audience]}">${s.audience}</span></div>`;
+    div.addEventListener("click", () => showBrowseDetail(s));
+    list.appendChild(div);
+  });
+}
+
+function showBrowseDetail(s) {
+  const el = document.getElementById("browse-detail");
+  const eraClass = s.era==="pre-war"?"eb-pre":"eb-war";
+  el.innerHTML = `
+    <div class="card">
+      <h3 style="color:var(--accent-light);font-size:0.95rem;text-transform:none;letter-spacing:0">${s.title}</h3>
+      <p style="font-family:sans-serif;font-size:0.78rem;color:var(--muted);margin-bottom:1rem">
+        ${s.displayDate} &mdash; <span class="era-badge ${eraClass}">${s.era}</span>
+        &bull; <span style="color:${AUD_COLORS[s.audience]}">${s.audience}</span>
+        &bull; ${s.wordCount.toLocaleString()} words
+      </p>
+      <div style="margin-bottom:1rem">
+        ${[
+          ["FK Grade", s.fleschKincaidGrade != null ? s.fleschKincaidGrade : "—"],
+          ["Avg Sentence", s.avgSentenceLength + " words"],
+          ["Avg Word Length", s.avgWordLength + " chars"],
+          ["Vocab Richness", s.vocabRichness],
+        ].map(([l,v])=>`<div class="bar-row" style="margin-bottom:0.4rem">
+          <div class="bar-label">${l}</div>
+          <div style="font-family:sans-serif;font-size:0.85rem;color:var(--accent-light)">${v}</div>
+        </div>`).join("")}
+      </div>
+      <h3 style="margin-bottom:0.6rem">Pronoun Profile (per 1,000 words)</h3>
+      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:1rem">
+        ${[["we","#4a9eff","We/Our"],["you","#ffcc44","You"],["i","#c97aff","I"],["they","#ff6b4a","They"]].map(([k,c,l])=>`
+          <div style="text-align:center">
+            <div style="font-family:sans-serif;font-size:1.3rem;font-weight:bold;color:${c}">${s.pronouns[k]}</div>
+            <div style="font-family:sans-serif;font-size:0.68rem;color:var(--muted);text-transform:uppercase">${l}</div>
+          </div>`).join("")}
+      </div>
+      <p style="font-family:sans-serif;font-size:0.8rem;line-height:1.6;color:var(--muted);font-style:italic">
+        &ldquo;${s.textPreview}&hellip;&rdquo;
+      </p>
+    </div>`;
+}
+
+function setupTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+      t.classList.add("active");
+      document.getElementById("panel-"+t.dataset.tab).classList.add("active");
+      if (t.dataset.tab === "scatter") buildScatter();
+    });
+  });
+}
+
+init();
+</script>
+
+<div class="method-note" style="margin:0 2rem 3rem">
+  <strong>Methodological Note</strong><br>
+  Audience classifications were assigned algorithmically from speech titles and occasion keywords:
+  speeches with &ldquo;Congress,&rdquo; &ldquo;Senate,&rdquo; or &ldquo;Annual Message&rdquo; were coded as Congressional;
+  speeches to named regiments or troop assemblies as Military/Soldiers; campaign speeches and debates as
+  Political Rally; and so on. This approach is imperfect &mdash; the Cooper Union address was classified
+  as General Public, but its actual audience was New York Republican elites, a more specific group than
+  the label suggests. Readability scores (Flesch-Kincaid) and sentence length were calculated from
+  the raw text. Pronoun counts include all forms of each pronoun (we/us/our, you/your, etc.).
+  All metrics are computed from the same 125-speech corpus as the other tools in this project.
+</div>
+</body>
+</html>
