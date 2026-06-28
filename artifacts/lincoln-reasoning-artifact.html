@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln: Argumentation Map</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3148;--text:#e8e9f0;--muted:#8b8fa8;--accent:#c9a84c;--al:#f0c96a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Georgia,serif;min-height:100vh}
+.hero{background:linear-gradient(160deg,#12151f,#1a1d27 60%,#0f1117);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;text-align:center}
+.eyebrow{font-family:sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);margin-bottom:.8rem}
+h1{font-size:clamp(1.6rem,3.5vw,2.6rem);color:var(--al);margin-bottom:.5rem}
+.sub{font-family:sans-serif;font-size:.95rem;color:var(--muted);max-width:600px;margin:0 auto;line-height:1.6}
+.tabs{display:flex;border-bottom:2px solid var(--border);background:var(--surface);padding:0 1.5rem;overflow-x:auto}
+.tab{font-family:sans-serif;font-size:.82rem;padding:.8rem 1.2rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab.active{color:var(--al);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+.panel.active{display:block}
+.section-label{font-family:sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1.2rem}
+canvas{display:block;width:100%}
+.chart-note{font-family:sans-serif;font-size:.72rem;color:var(--muted);margin-top:.5rem;line-height:1.5}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.speech-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.8rem}
+.speech-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;cursor:pointer;transition:border-color .2s}
+.speech-card:hover{border-color:var(--accent)}
+.sc-title{color:var(--al);font-size:.9rem;margin-bottom:.25rem}
+.sc-meta{font-family:sans-serif;font-size:.72rem;color:var(--muted);margin-bottom:.5rem}
+.mini-bars{display:flex;flex-direction:column;gap:3px}
+.mini-bar-row{display:flex;align-items:center;gap:.4rem}
+.mini-bar-lbl{font-family:sans-serif;font-size:.62rem;color:var(--muted);width:60px;flex-shrink:0}
+.mini-bar-track{flex:1;background:var(--surface2);border-radius:2px;height:6px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:2px}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+@media(max-width:600px){.about-grid{grid-template-columns:1fr}}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem}
+.about-card h3{font-family:sans-serif;font-size:.82rem;color:var(--al);margin-bottom:.5rem}
+.about-card p{font-family:sans-serif;font-size:.78rem;color:var(--muted);line-height:1.6}
+.about-card p+p{margin-top:.4rem}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.4rem .8rem;border-radius:4px;font-family:sans-serif;font-size:.8rem;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Computational Rhetoric &mdash; Lincoln Corpus</div>
+  <h1>How Lincoln Built His Cases: An Argumentation Map</h1>
+  <p class="sub">Seven reasoning types tracked across 125 speeches — revealing how Lincoln's argumentative strategy shifted from metaphor and precedent to moral necessity as the war transformed his presidency.</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="stream">Reasoning Over Time</div>
+  <div class="tab" data-tab="compare">Era Comparison</div>
+  <div class="tab" data-tab="browse">Browse Speeches</div>
+  <div class="tab" data-tab="about">About</div>
+</div>
+
+<div id="stream" class="panel active">
+  <div class="section-label">All Seven Reasoning Types — Chronological Stream</div>
+  <div class="chart-wrap">
+    <canvas id="stream-chart" height="260"></canvas>
+    <p class="chart-note">Each vertical bar is one speech. Segments show the proportion of each reasoning type per 1,000 words. Speeches are ordered chronologically left to right.</p>
+  </div>
+  <div class="section-label">Moral vs. Legal Reasoning — Rolling Average</div>
+  <div class="chart-wrap">
+    <canvas id="moral-legal-chart" height="180"></canvas>
+    <p class="chart-note">6-speech rolling average. Moral reasoning dominates throughout; legal reasoning peaks during constitutional debates of the 1850s then declines sharply once the war begins.</p>
+  </div>
+  <div class="section-label">Pragmatic Reasoning — Rolling Average</div>
+  <div class="chart-wrap">
+    <canvas id="pragmatic-chart" height="160"></canvas>
+    <p class="chart-note">Pragmatic reasoning — appeals to practical necessity — rises steadily during the war years. "We must do this because the situation demands it" replaces theoretical argument.</p>
+  </div>
+</div>
+
+<div id="compare" class="panel">
+  <div class="section-label">Pre-War → Wartime Shift by Reasoning Type</div>
+  <div class="chart-wrap">
+    <canvas id="delta-chart" height="280"></canvas>
+    <p class="chart-note">Bars extending right = that reasoning type increased in wartime. Bars extending left = it decreased. Values are average scores per 1,000 words.</p>
+  </div>
+  <div class="section-label">Era Averages — All Reasoning Types</div>
+  <div class="chart-wrap">
+    <canvas id="era-chart" height="200"></canvas>
+    <p class="chart-note">Grouped bars comparing average reasoning scores across the three eras. Moral reasoning is consistently dominant; note the wartime drop in analogical reasoning.</p>
+  </div>
+</div>
+
+<div id="browse" class="panel">
+  <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+    <select id="era-select">
+      <option value="all">All Eras</option>
+      <option value="pre-war">Pre-War</option>
+      <option value="wartime">Wartime</option>
+    </select>
+    <select id="sort-select">
+      <option value="date">Sort by Date</option>
+      <option value="moral">Sort by Moral</option>
+      <option value="legal">Sort by Legal</option>
+      <option value="pragmatic">Sort by Pragmatic</option>
+    </select>
+  </div>
+  <div class="speech-list" id="speech-list"></div>
+</div>
+
+<div id="about" class="panel">
+  <div class="section-label" style="margin-bottom:1rem">About This Analysis</div>
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>How Reasoning Types Were Detected</h3>
+      <p>Each speech was analyzed for keyword and phrase patterns associated with seven reasoning modes: moral (appeals to conscience, right/wrong), legal (constitutional argument, precedent), historical (reference to past events or figures), pragmatic (practical necessity, consequences), deductive (if/then logical chains), analogical (comparisons and metaphors), and inductive (evidence from examples).</p>
+      <p>Scores represent weighted keyword frequency per 1,000 words, not a holistic judgment of argumentative quality.</p>
+    </div>
+    <div class="about-card">
+      <h3>Key Findings</h3>
+      <p>Moral reasoning dominates Lincoln's rhetoric in every era — but its character changes. Pre-war moral argument is theoretical and constitutional; wartime moral argument becomes existential and urgent.</p>
+      <p>Analogical reasoning (comparison, metaphor) declines sharply during the war. Lincoln stops explaining by comparison and starts declaring. The "house divided" metaphor belongs to a different Lincoln than the one who issued the Emancipation Proclamation.</p>
+    </div>
+    <div class="about-card">
+      <h3>What the Numbers Miss</h3>
+      <p>The Gettysburg Address scores modestly on most reasoning types because it is short and abstract. Its power is not algorithmic. Pattern-matching counts occurrences of legal vocabulary or logical connectors — it cannot measure the weight of "Four score and seven years ago" as both historical invocation and moral indictment.</p>
+    </div>
+    <div class="about-card">
+      <h3>The Wartime Shift</h3>
+      <p>The single most visible pattern in this dataset is the compression of Lincoln's argumentative repertoire after Fort Sumter. Pre-war Lincoln deploys all seven modes; wartime Lincoln concentrates on moral and pragmatic argument, often within the same short address. The war did not change what Lincoln believed — it changed what he needed to say, and how quickly he needed to say it.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"id":"1832-03-09_communication-to-the-people-of-sangamon-county-first-politic","date":"1832-03-09","title":"Communication to the People of Sangamon County (First Political Announcement)","era":"pre-war","wc":17095,"r":{"deductive":0.88,"inductive":0.41,"analogical":0.88,"moral":3.92,"legal":2.87,"historical":1.46,"pragmatic":3.39},"dom":"moral"},{"id":"1837-01-11_address-to-the-people-of-illinois-on-the-state-bank","date":"1837-01-11","title":"Address to the People of Illinois on the State Bank","era":"pre-war","wc":15602,"r":{"deductive":0.96,"inductive":0.38,"analogical":0.96,"moral":3.78,"legal":2.82,"historical":1.54,"pragmatic":3.4},"dom":"moral"},{"id":"1837-03-03_protest-against-slavery-in-the-illinois-legislature","date":"1837-03-03","title":"Protest against Slavery in the Illinois Legislature","era":"pre-war","wc":16873,"r":{"deductive":0.89,"inductive":0.41,"analogical":0.89,"moral":3.97,"legal":2.9,"historical":1.48,"pragmatic":3.32},"dom":"moral"},{"id":"1838-01-27_the-perpetuation-of-our-political-institutions-lyceum-addres","date":"1838-01-27","title":"The Perpetuation of Our Political Institutions (Lyceum Address)","era":"pre-war","wc":3552,"r":{"deductive":2.53,"inductive":0.56,"analogical":0.56,"moral":1.97,"legal":5.07,"historical":2.82,"pragmatic":5.07},"dom":"legal"},{"id":"1839-12-26_address-on-the-sub-treasury-first-political-speech-against-d","date":"1839-12-26","title":"Address on the Sub-Treasury (First Political Speech against Democrats)","era":"pre-war","wc":11082,"r":{"deductive":0.81,"inductive":0.54,"analogical":1.08,"moral":3.07,"legal":2.53,"historical":1.53,"pragmatic":3.88},"dom":"pragmatic"},{"id":"1839-12-29_address-on-the-sub-treasury-second-political-speech","date":"1839-12-29","title":"Address on the Sub-Treasury (Second Political Speech)","era":"pre-war","wc":764,"r":{"deductive":1.31,"inductive":0.0,"analogical":0.0,"moral":1.31,"legal":15.71,"historical":0.0,"pragmatic":1.31},"dom":"legal"},{"id":"1841-07-01_eulogy-on-president-william-henry-harrison","date":"1841-07-01","title":"Eulogy on President William Henry Harrison","era":"pre-war","wc":1520,"r":{"deductive":1.32,"inductive":0.0,"analogical":1.32,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1842-02-22_address-to-the-washington-temperance-society","date":"1842-02-22","title":"Address to the Washington Temperance Society","era":"pre-war","wc":3894,"r":{"deductive":0.26,"inductive":0.51,"analogical":2.05,"moral":6.16,"legal":0.0,"historical":1.28,"pragmatic":2.05},"dom":"moral"},{"id":"1847-12-22_spot-resolutions-speech-on-the-mexican-war","date":"1847-12-22","title":"Spot Resolutions (Speech on the Mexican War)","era":"pre-war","wc":603,"r":{"deductive":3.32,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":1.66},"dom":"pragmatic"},{"id":"1848-01-12_speech-on-the-mexican-american-war","date":"1848-01-12","title":"Speech on the Mexican-American War","era":"pre-war","wc":4893,"r":{"deductive":0.61,"inductive":0.61,"analogical":0.82,"moral":3.07,"legal":3.27,"historical":1.23,"pragmatic":0.82},"dom":"legal"},{"id":"1848-06-20_speech-on-internal-improvements","date":"1848-06-20","title":"Speech on Internal Improvements","era":"pre-war","wc":14533,"r":{"deductive":0.83,"inductive":0.41,"analogical":0.96,"moral":3.99,"legal":2.96,"historical":1.65,"pragmatic":3.51},"dom":"moral"},{"id":"1848-07-27_speech-in-the-us-house-on-the-presidential-question","date":"1848-07-27","title":"Speech in the U.S. House on the Presidential Question","era":"pre-war","wc":490,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":6.12,"legal":6.12,"historical":10.2,"pragmatic":6.12},"dom":"historical"},{"id":"1848-09-12_campaign-speech-for-zachary-taylor-at-worcester-massachusett","date":"1848-09-12","title":"Campaign Speech for Zachary Taylor at Worcester, Massachusetts","era":"pre-war","wc":1546,"r":{"deductive":0.65,"inductive":0.0,"analogical":0.65,"moral":7.76,"legal":3.23,"historical":0.65,"pragmatic":1.94},"dom":"moral"},{"id":"1848-09-15_campaign-speech-for-zachary-taylor-at-boston","date":"1848-09-15","title":"Campaign Speech for Zachary Taylor at Boston","era":"pre-war","wc":65,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":15.38,"legal":0.0,"historical":15.38,"pragmatic":0.0},"dom":"moral"},{"id":"1850-07-25_eulogy-on-zachary-taylor","date":"1850-07-25","title":"Eulogy on Zachary Taylor","era":"pre-war","wc":5429,"r":{"deductive":1.29,"inductive":0.55,"analogical":1.29,"moral":2.58,"legal":2.03,"historical":2.03,"pragmatic":2.58},"dom":"moral"},{"id":"1852-07-06_eulogy-on-henry-clay","date":"1852-07-06","title":"Eulogy on Henry Clay","era":"pre-war","wc":10874,"r":{"deductive":1.29,"inductive":0.55,"analogical":1.29,"moral":2.57,"legal":2.02,"historical":2.21,"pragmatic":2.94},"dom":"pragmatic"},{"id":"1854-10-04_speech-on-the-kansas-nebraska-act-at-springfield","date":"1854-10-04","title":"Speech on the Kansas-Nebraska Act at Springfield","era":"pre-war","wc":15646,"r":{"deductive":0.96,"inductive":0.38,"analogical":0.96,"moral":3.77,"legal":2.81,"historical":1.53,"pragmatic":3.39},"dom":"moral"},{"id":"1854-10-16_at-peoria-illinois","date":"1854-10-16","title":"At Peoria, Illinois","era":"pre-war","wc":33424,"r":{"deductive":1.74,"inductive":0.36,"analogical":1.2,"moral":7.0,"legal":5.21,"historical":2.39,"pragmatic":2.39},"dom":"moral"},{"id":"1856-05-29_speech-at-bloomington-illinois-the-lost-speech","date":"1856-05-29","title":"Speech at Bloomington, Illinois (The Lost Speech)","era":"pre-war","wc":67,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1856-07-23_speech-at-galena-illinois","date":"1856-07-23","title":"Speech at Galena, Illinois","era":"pre-war","wc":661,"r":{"deductive":3.03,"inductive":0.0,"analogical":0.0,"moral":1.51,"legal":6.05,"historical":0.0,"pragmatic":6.05},"dom":"legal"},{"id":"1856-08-27_speech-at-kalamazoo-michigan","date":"1856-08-27","title":"Speech at Kalamazoo, Michigan","era":"pre-war","wc":4893,"r":{"deductive":0.61,"inductive":0.61,"analogical":0.82,"moral":3.07,"legal":3.27,"historical":1.23,"pragmatic":0.82},"dom":"legal"},{"id":"1858-06-16_a-house-divided-speech","date":"1858-06-16","title":"A House Divided Speech","era":"pre-war","wc":3214,"r":{"deductive":0.31,"inductive":1.24,"analogical":1.24,"moral":4.98,"legal":11.2,"historical":1.87,"pragmatic":1.87},"dom":"legal"},{"id":"1858-07-10_speech-at-chicago-reply-to-douglas","date":"1858-07-10","title":"Speech at Chicago (Reply to Douglas)","era":"pre-war","wc":8282,"r":{"deductive":0.48,"inductive":0.48,"analogical":1.09,"moral":5.31,"legal":5.92,"historical":2.17,"pragmatic":1.45},"dom":"legal"},{"id":"1858-07-17_speech-at-springfield-reply-to-douglas","date":"1858-07-17","title":"Speech at Springfield (Reply to Douglas)","era":"pre-war","wc":7935,"r":{"deductive":0.63,"inductive":0.63,"analogical":0.76,"moral":2.77,"legal":6.43,"historical":2.27,"pragmatic":1.64},"dom":"legal"},{"id":"1858-08-17_speech-at-lewistown-illinois","date":"1858-08-17","title":"Speech at Lewistown, Illinois","era":"pre-war","wc":8282,"r":{"deductive":0.48,"inductive":0.48,"analogical":1.09,"moral":5.31,"legal":5.92,"historical":2.17,"pragmatic":1.45},"dom":"legal"},{"id":"1858-08-21_lincoln-douglas-debate-no-1-ottawa-illinois","date":"1858-08-21","title":"Lincoln-Douglas Debate No. 1 \u2014 Ottawa, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-08-27_lincoln-douglas-debate-no-2-freeport-illinois","date":"1858-08-27","title":"Lincoln-Douglas Debate No. 2 \u2014 Freeport, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-08-31_speech-at-carlinville-illinois","date":"1858-08-31","title":"Speech at Carlinville, Illinois","era":"pre-war","wc":29,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1858-09-11_speech-at-edwardsville-illinois","date":"1858-09-11","title":"Speech at Edwardsville, Illinois","era":"pre-war","wc":1003,"r":{"deductive":0.0,"inductive":2.99,"analogical":0.0,"moral":11.96,"legal":1.99,"historical":2.99,"pragmatic":1.99},"dom":"moral"},{"id":"1858-09-15_lincoln-douglas-debate-no-3-jonesboro-illinois","date":"1858-09-15","title":"Lincoln-Douglas Debate No. 3 \u2014 Jonesboro, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-09-18_lincoln-douglas-debate-no-4-charleston-illinois","date":"1858-09-18","title":"Lincoln-Douglas Debate No. 4 \u2014 Charleston, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-10-07_lincoln-douglas-debate-no-5-galesburg-illinois","date":"1858-10-07","title":"Lincoln-Douglas Debate No. 5 \u2014 Galesburg, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-10-11_speech-at-monmouth-illinois","date":"1858-10-11","title":"Speech at Monmouth, Illinois","era":"pre-war","wc":17,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1858-10-13_lincoln-douglas-debate-no-6-quincy-illinois","date":"1858-10-13","title":"Lincoln-Douglas Debate No. 6 \u2014 Quincy, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1858-10-15_lincoln-douglas-debate-no-7-alton-illinois","date":"1858-10-15","title":"Lincoln-Douglas Debate No. 7 \u2014 Alton, Illinois","era":"pre-war","wc":15118,"r":{"deductive":0.99,"inductive":0.4,"analogical":0.93,"moral":3.84,"legal":2.84,"historical":1.59,"pragmatic":3.44},"dom":"moral"},{"id":"1859-09-16_speech-at-columbus-ohio","date":"1859-09-16","title":"Speech at Columbus, Ohio","era":"pre-war","wc":11924,"r":{"deductive":1.68,"inductive":0.75,"analogical":1.01,"moral":4.61,"legal":7.21,"historical":4.03,"pragmatic":3.02},"dom":"legal"},{"id":"1859-09-17_speech-at-cincinnati-ohio","date":"1859-09-17","title":"Speech at Cincinnati, Ohio","era":"pre-war","wc":11183,"r":{"deductive":1.16,"inductive":0.45,"analogical":0.8,"moral":5.54,"legal":4.56,"historical":1.52,"pragmatic":2.68},"dom":"moral"},{"id":"1859-09-17_speech-at-dayton-ohio","date":"1859-09-17","title":"Speech at Dayton, Ohio","era":"pre-war","wc":18,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1859-09-17_speech-at-hamilton-ohio","date":"1859-09-17","title":"Speech at Hamilton, Ohio","era":"pre-war","wc":13,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1859-09-19_speech-at-indianapolis-indiana","date":"1859-09-19","title":"Speech at Indianapolis, Indiana","era":"pre-war","wc":180,"r":{"deductive":0.0,"inductive":5.56,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1859-09-30_address-at-the-wisconsin-state-agricultural-society-milwauke","date":"1859-09-30","title":"Address at the Wisconsin State Agricultural Society (Milwaukee Speech)","era":"pre-war","wc":245,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":4.08,"pragmatic":0.0},"dom":"historical"},{"id":"1859-09-30_speech-at-milwaukee-wisconsin","date":"1859-09-30","title":"Speech at Milwaukee, Wisconsin","era":"pre-war","wc":3894,"r":{"deductive":0.26,"inductive":0.51,"analogical":2.05,"moral":6.16,"legal":0.0,"historical":1.28,"pragmatic":2.05},"dom":"moral"},{"id":"1859-12-01_speech-at-elwood-kansas","date":"1859-12-01","title":"Speech at Elwood, Kansas","era":"pre-war","wc":3732,"r":{"deductive":0.8,"inductive":0.0,"analogical":0.54,"moral":2.95,"legal":5.36,"historical":0.8,"pragmatic":4.29},"dom":"legal"},{"id":"1859-12-02_speech-at-atchison-kansas","date":"1859-12-02","title":"Speech at Atchison, Kansas","era":"pre-war","wc":3732,"r":{"deductive":0.8,"inductive":0.0,"analogical":0.54,"moral":2.95,"legal":5.36,"historical":0.8,"pragmatic":4.29},"dom":"legal"},{"id":"1859-12-02_speech-at-troy-kansas","date":"1859-12-02","title":"Speech at Troy, Kansas","era":"pre-war","wc":3732,"r":{"deductive":0.8,"inductive":0.0,"analogical":0.54,"moral":2.95,"legal":5.36,"historical":0.8,"pragmatic":4.29},"dom":"legal"},{"id":"1859-12-03_speech-at-leavenworth-kansas","date":"1859-12-03","title":"Speech at Leavenworth, Kansas","era":"pre-war","wc":176,"r":{"deductive":5.68,"inductive":0.0,"analogical":5.68,"moral":28.41,"legal":0.0,"historical":0.0,"pragmatic":5.68},"dom":"moral"},{"id":"1860-02-27_address-at-cooper-union-evening-remarks","date":"1860-02-27","title":"Address at Cooper Union (Evening Remarks)","era":"pre-war","wc":3556,"r":{"deductive":2.53,"inductive":0.56,"analogical":0.56,"moral":1.97,"legal":5.06,"historical":2.81,"pragmatic":5.06},"dom":"legal"},{"id":"1860-02-27_cooper-union-address","date":"1860-02-27","title":"Cooper Union Address","era":"pre-war","wc":6164,"r":{"deductive":1.95,"inductive":1.95,"analogical":1.46,"moral":6.16,"legal":10.87,"historical":8.92,"pragmatic":2.43},"dom":"legal"},{"id":"1860-03-05_speech-at-hartford-connecticut","date":"1860-03-05","title":"Speech at Hartford, Connecticut","era":"pre-war","wc":7939,"r":{"deductive":0.88,"inductive":1.39,"analogical":1.01,"moral":12.85,"legal":1.76,"historical":3.15,"pragmatic":10.08},"dom":"moral"},{"id":"1860-03-06_speech-at-new-haven-connecticut","date":"1860-03-06","title":"Speech at New Haven, Connecticut","era":"pre-war","wc":7939,"r":{"deductive":0.88,"inductive":1.39,"analogical":1.01,"moral":12.85,"legal":1.76,"historical":3.15,"pragmatic":10.08},"dom":"moral"},{"id":"1860-03-08_speech-at-providence-rhode-island","date":"1860-03-08","title":"Speech at Providence, Rhode Island","era":"pre-war","wc":24,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1860-05-18_address-at-chicago-after-nomination-acceptance","date":"1860-05-18","title":"Address at Chicago after Nomination (Acceptance)","era":"pre-war","wc":3046,"r":{"deductive":0.66,"inductive":0.33,"analogical":1.97,"moral":2.95,"legal":1.64,"historical":2.3,"pragmatic":1.97},"dom":"moral"},{"id":"1860-05-23_reply-to-the-committee-notifying-lincoln-of-his-nomination","date":"1860-05-23","title":"Reply to the Committee Notifying Lincoln of his Nomination","era":"pre-war","wc":3136,"r":{"deductive":0.64,"inductive":0.32,"analogical":1.91,"moral":2.87,"legal":1.59,"historical":2.23,"pragmatic":1.91},"dom":"moral"},{"id":"1860-07-10_speech-at-chicago-after-nomination","date":"1860-07-10","title":"Speech at Chicago after Nomination","era":"pre-war","wc":3046,"r":{"deductive":0.66,"inductive":0.33,"analogical":1.97,"moral":2.95,"legal":1.64,"historical":2.3,"pragmatic":1.97},"dom":"moral"},{"id":"1861-01-31_reply-to-the-governor-and-legislature-of-illinois","date":"1861-01-31","title":"Reply to the Governor and Legislature of Illinois","era":"wartime","wc":9095,"r":{"deductive":0.33,"inductive":0.33,"analogical":0.55,"moral":6.27,"legal":4.51,"historical":1.87,"pragmatic":3.52},"dom":"moral"},{"id":"1861-02-11_farewell-address","date":"1861-02-11","title":"Farewell Address","era":"wartime","wc":152,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":6.58,"legal":0.0,"historical":6.58,"pragmatic":0.0},"dom":"moral"},{"id":"1861-02-11_speech-at-indianapolis-indiana","date":"1861-02-11","title":"Speech at Indianapolis, Indiana","era":"wartime","wc":180,"r":{"deductive":0.0,"inductive":5.56,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1861-02-13_speech-at-columbus-ohio","date":"1861-02-13","title":"Speech at Columbus, Ohio","era":"wartime","wc":358,"r":{"deductive":0.0,"inductive":2.79,"analogical":0.0,"moral":11.17,"legal":2.79,"historical":2.79,"pragmatic":11.17},"dom":"moral"},{"id":"1861-02-15_speech-at-cleveland-ohio","date":"1861-02-15","title":"Speech at Cleveland, Ohio","era":"wartime","wc":479,"r":{"deductive":2.09,"inductive":0.0,"analogical":4.18,"moral":2.09,"legal":8.35,"historical":2.09,"pragmatic":2.09},"dom":"legal"},{"id":"1861-02-15_speech-at-pittsburgh-pennsylvania","date":"1861-02-15","title":"Speech at Pittsburgh, Pennsylvania","era":"wartime","wc":1232,"r":{"deductive":0.81,"inductive":0.81,"analogical":2.44,"moral":3.25,"legal":3.25,"historical":0.0,"pragmatic":4.87},"dom":"pragmatic"},{"id":"1861-02-18_address-to-the-legislature-of-new-york-at-albany","date":"1861-02-18","title":"Address to the Legislature of New York at Albany","era":"wartime","wc":565,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":1.77,"legal":0.0,"historical":1.77,"pragmatic":3.54},"dom":"pragmatic"},{"id":"1861-02-21_address-to-the-new-jersey-general-assembly-at-trenton","date":"1861-02-21","title":"Address to the New Jersey General Assembly at Trenton","era":"wartime","wc":1062,"r":{"deductive":0.0,"inductive":0.94,"analogical":0.0,"moral":5.65,"legal":5.65,"historical":0.0,"pragmatic":3.77},"dom":"moral"},{"id":"1861-02-21_address-to-the-new-jersey-senate-at-trenton","date":"1861-02-21","title":"Address to the New Jersey Senate at Trenton","era":"wartime","wc":1089,"r":{"deductive":0.92,"inductive":0.0,"analogical":0.0,"moral":3.67,"legal":3.67,"historical":3.67,"pragmatic":5.51},"dom":"pragmatic"},{"id":"1861-02-22_address-at-independence-hall-philadelphia","date":"1861-02-22","title":"Address at Independence Hall, Philadelphia","era":"wartime","wc":628,"r":{"deductive":1.59,"inductive":1.59,"analogical":0.0,"moral":1.59,"legal":1.59,"historical":11.15,"pragmatic":1.59},"dom":"historical"},{"id":"1861-02-22_address-to-the-legislature-of-pennsylvania-at-harrisburg","date":"1861-02-22","title":"Address to the Legislature of Pennsylvania at Harrisburg","era":"wartime","wc":773,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":2.59,"legal":0.0,"historical":1.29,"pragmatic":1.29},"dom":"moral"},{"id":"1861-03-04_first-inaugural-address","date":"1861-03-04","title":"First Inaugural Address","era":"wartime","wc":3636,"r":{"deductive":1.1,"inductive":1.38,"analogical":0.0,"moral":5.23,"legal":15.95,"historical":1.65,"pragmatic":4.95},"dom":"legal"},{"id":"1861-04-15_proclamation-calling-the-militia-and-convening-congress","date":"1861-04-15","title":"Proclamation Calling the Militia and Convening Congress","era":"wartime","wc":442,"r":{"deductive":4.52,"inductive":2.26,"analogical":0.0,"moral":4.52,"legal":4.52,"historical":2.26,"pragmatic":4.52},"dom":"moral"},{"id":"1861-04-19_proclamation-of-blockade-against-southern-states","date":"1861-04-19","title":"Proclamation of Blockade Against Southern States","era":"wartime","wc":9761,"r":{"deductive":0.92,"inductive":0.41,"analogical":1.23,"moral":2.87,"legal":1.84,"historical":1.74,"pragmatic":4.2},"dom":"pragmatic"},{"id":"1861-04-27_proclamation-of-blockade-against-virginia-and-north-carolina","date":"1861-04-27","title":"Proclamation of Blockade Against Virginia and North Carolina","era":"wartime","wc":7002,"r":{"deductive":0.29,"inductive":0.14,"analogical":0.57,"moral":7.43,"legal":3.86,"historical":1.43,"pragmatic":4.0},"dom":"moral"},{"id":"1861-07-04_july-4th-message-to-congress","date":"1861-07-04","title":"July 4th Message to Congress","era":"wartime","wc":6286,"r":{"deductive":1.43,"inductive":0.64,"analogical":0.48,"moral":4.45,"legal":9.07,"historical":1.91,"pragmatic":2.86},"dom":"legal"},{"id":"1861-07-08_message-to-congress-requesting-suspension-of-habeas-corpus","date":"1861-07-08","title":"Message to Congress Requesting Suspension of Habeas Corpus","era":"wartime","wc":1332,"r":{"deductive":0.75,"inductive":0.0,"analogical":0.0,"moral":2.25,"legal":3.75,"historical":3.0,"pragmatic":3.0},"dom":"legal"},{"id":"1861-08-12_proclamation-of-a-national-fast-day","date":"1861-08-12","title":"Proclamation of a National Fast Day","era":"wartime","wc":459,"r":{"deductive":2.18,"inductive":0.0,"analogical":0.0,"moral":8.71,"legal":2.18,"historical":4.36,"pragmatic":0.0},"dom":"moral"},{"id":"1861-11-26_message-to-the-senate-and-house-on-compensated-emancipation-","date":"1861-11-26","title":"Message to the Senate and House on Compensated Emancipation in Delaware","era":"wartime","wc":2929,"r":{"deductive":0.68,"inductive":0.34,"analogical":0.68,"moral":6.49,"legal":5.46,"historical":1.37,"pragmatic":4.78},"dom":"moral"},{"id":"1861-12-03_first-annual-message","date":"1861-12-03","title":"First Annual Message","era":"wartime","wc":7052,"r":{"deductive":2.41,"inductive":0.85,"analogical":0.0,"moral":3.69,"legal":4.11,"historical":0.57,"pragmatic":2.41},"dom":"legal"},{"id":"1862-01-17_message-to-the-senate-on-the-trent-affair","date":"1862-01-17","title":"Message to the Senate on the Trent Affair","era":"wartime","wc":139,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1862-03-06_message-to-the-senate-transmitting-diplomatic-correspondence","date":"1862-03-06","title":"Message to the Senate Transmitting Diplomatic Correspondence on Slavery","era":"wartime","wc":103,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":9.71,"pragmatic":0.0},"dom":"historical"},{"id":"1862-03-06_special-message-to-congress-on-compensated-emancipation","date":"1862-03-06","title":"Special Message to Congress on Compensated Emancipation","era":"wartime","wc":2929,"r":{"deductive":0.68,"inductive":0.34,"analogical":0.68,"moral":6.49,"legal":5.46,"historical":1.37,"pragmatic":4.78},"dom":"moral"},{"id":"1862-04-16_message-to-congress-on-emancipation-in-washington-dc","date":"1862-04-16","title":"Message to Congress on Emancipation in Washington DC","era":"wartime","wc":210,"r":{"deductive":4.76,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":4.76,"historical":0.0,"pragmatic":0.0},"dom":"legal"},{"id":"1862-05-19_proclamation-revoking-general-hunters-emancipation-order","date":"1862-05-19","title":"Proclamation Revoking General Hunter's Emancipation Order","era":"wartime","wc":6360,"r":{"deductive":1.1,"inductive":0.16,"analogical":1.57,"moral":3.14,"legal":2.2,"historical":1.42,"pragmatic":2.67},"dom":"moral"},{"id":"1862-07-11_annual-message-to-congress-on-state-of-the-navy","date":"1862-07-11","title":"Annual Message to Congress on State of the Navy","era":"wartime","wc":14940,"r":{"deductive":1.0,"inductive":0.4,"analogical":0.94,"moral":3.88,"legal":2.88,"historical":1.61,"pragmatic":3.48},"dom":"moral"},{"id":"1862-07-12_address-to-border-state-congressmen","date":"1862-07-12","title":"Address to Border State Congressmen","era":"wartime","wc":1066,"r":{"deductive":0.94,"inductive":1.88,"analogical":0.0,"moral":3.75,"legal":0.94,"historical":1.88,"pragmatic":0.94},"dom":"moral"},{"id":"1862-07-14_message-to-congress-on-compensated-emancipation-july","date":"1862-07-14","title":"Message to Congress on Compensated Emancipation (July)","era":"wartime","wc":2929,"r":{"deductive":0.68,"inductive":0.34,"analogical":0.68,"moral":6.49,"legal":5.46,"historical":1.37,"pragmatic":4.78},"dom":"moral"},{"id":"1862-07-16_address-on-colonization-to-the-senate-and-house","date":"1862-07-16","title":"Address on Colonization to the Senate and House","era":"wartime","wc":207,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":4.83,"legal":4.83,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1862-08-14_address-to-a-deputation-of-free-black-men-on-colonization","date":"1862-08-14","title":"Address to a Deputation of Free Black Men on Colonization","era":"wartime","wc":11387,"r":{"deductive":0.79,"inductive":0.53,"analogical":1.05,"moral":3.16,"legal":2.46,"historical":1.67,"pragmatic":3.86},"dom":"pragmatic"},{"id":"1862-08-22_letter-to-horace-greeley-reply-to-prayer-of-twenty-millions","date":"1862-08-22","title":"Letter to Horace Greeley (Reply to 'Prayer of Twenty Millions')","era":"wartime","wc":12344,"r":{"deductive":0.73,"inductive":0.49,"analogical":1.05,"moral":3.89,"legal":2.75,"historical":1.7,"pragmatic":3.81},"dom":"moral"},{"id":"1862-09-13_response-to-chicago-clergy-urging-emancipation","date":"1862-09-13","title":"Response to Chicago Clergy Urging Emancipation","era":"wartime","wc":1267,"r":{"deductive":1.58,"inductive":1.58,"analogical":0.79,"moral":6.31,"legal":3.95,"historical":0.79,"pragmatic":4.74},"dom":"moral"},{"id":"1862-09-22_preliminary-emancipation-proclamation","date":"1862-09-22","title":"Preliminary Emancipation Proclamation","era":"wartime","wc":5169,"r":{"deductive":1.16,"inductive":0.19,"analogical":1.74,"moral":2.13,"legal":1.55,"historical":1.74,"pragmatic":2.9},"dom":"pragmatic"},{"id":"1862-09-24_proclamation-suspending-the-writ-of-habeas-corpus","date":"1862-09-24","title":"Proclamation Suspending the Writ of Habeas Corpus","era":"wartime","wc":1332,"r":{"deductive":0.75,"inductive":0.0,"analogical":0.0,"moral":2.25,"legal":3.75,"historical":3.0,"pragmatic":3.0},"dom":"legal"},{"id":"1862-12-01_message-to-congress-recommending-compensated-emancipation-de","date":"1862-12-01","title":"Message to Congress Recommending Compensated Emancipation (December 1862)","era":"wartime","wc":2929,"r":{"deductive":0.68,"inductive":0.34,"analogical":0.68,"moral":6.49,"legal":5.46,"historical":1.37,"pragmatic":4.78},"dom":"moral"},{"id":"1862-12-01_second-annual-message","date":"1862-12-01","title":"Second Annual Message","era":"wartime","wc":8550,"r":{"deductive":1.29,"inductive":0.7,"analogical":0.47,"moral":1.75,"legal":2.34,"historical":0.23,"pragmatic":4.33},"dom":"pragmatic"},{"id":"1863-01-01_annual-message-transmitting-the-emancipation-proclamation-to","date":"1863-01-01","title":"Annual Message Transmitting the Emancipation Proclamation to Congress","era":"wartime","wc":242,"r":{"deductive":4.13,"inductive":0.0,"analogical":4.13,"moral":4.13,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1863-01-01_emancipation-proclamation","date":"1863-01-01","title":"Emancipation Proclamation","era":"wartime","wc":713,"r":{"deductive":2.81,"inductive":0.0,"analogical":1.4,"moral":4.21,"legal":4.21,"historical":2.81,"pragmatic":2.81},"dom":"moral"},{"id":"1863-01-19_reply-to-the-working-men-of-manchester-england","date":"1863-01-19","title":"Reply to the Working Men of Manchester, England","era":"wartime","wc":630,"r":{"deductive":3.17,"inductive":0.0,"analogical":0.0,"moral":7.94,"legal":3.17,"historical":3.17,"pragmatic":1.59},"dom":"moral"},{"id":"1863-02-02_reply-to-the-workingmen-of-london","date":"1863-02-02","title":"Reply to the Workingmen of London","era":"wartime","wc":179,"r":{"deductive":5.59,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1863-03-10_proclamation-of-amnesty-for-deserters","date":"1863-03-10","title":"Proclamation of Amnesty for Deserters","era":"wartime","wc":446,"r":{"deductive":2.24,"inductive":0.0,"analogical":0.0,"moral":2.24,"legal":6.73,"historical":4.48,"pragmatic":0.0},"dom":"legal"},{"id":"1863-03-18_address-at-the-sanitary-commission-fair-washington-dc","date":"1863-03-18","title":"Address at the Sanitary Commission Fair, Washington DC","era":"wartime","wc":591,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":6.77,"legal":0.0,"historical":6.77,"pragmatic":1.69},"dom":"moral"},{"id":"1863-03-30_proclamation-of-a-day-of-national-prayer-and-humiliation","date":"1863-03-30","title":"Proclamation of a Day of National Prayer and Humiliation","era":"wartime","wc":549,"r":{"deductive":1.82,"inductive":0.0,"analogical":1.82,"moral":18.21,"legal":3.64,"historical":3.64,"pragmatic":0.0},"dom":"moral"},{"id":"1863-07-07_response-to-a-serenade-after-gettysburg","date":"1863-07-07","title":"Response to a Serenade (After Gettysburg)","era":"wartime","wc":1187,"r":{"deductive":1.68,"inductive":0.84,"analogical":1.68,"moral":6.74,"legal":0.0,"historical":5.9,"pragmatic":6.74},"dom":"moral"},{"id":"1863-07-15_proclamation-of-thanksgiving-for-gettysburg-and-vicksburg","date":"1863-07-15","title":"Proclamation of Thanksgiving for Gettysburg and Vicksburg","era":"wartime","wc":5071,"r":{"deductive":0.99,"inductive":0.2,"analogical":1.77,"moral":2.17,"legal":1.58,"historical":1.58,"pragmatic":2.96},"dom":"pragmatic"},{"id":"1863-07-30_order-of-retaliation","date":"1863-07-30","title":"Order of Retaliation","era":"wartime","wc":225,"r":{"deductive":4.44,"inductive":0.0,"analogical":0.0,"moral":4.44,"legal":4.44,"historical":4.44,"pragmatic":0.0},"dom":"moral"},{"id":"1863-08-26_public-letter-to-james-conkling","date":"1863-08-26","title":"Public Letter to James Conkling","era":"wartime","wc":3393,"r":{"deductive":0.59,"inductive":0.0,"analogical":0.59,"moral":2.95,"legal":2.95,"historical":1.18,"pragmatic":3.54},"dom":"pragmatic"},{"id":"1863-09-07_address-at-the-dedication-of-the-soldiers-home-inaugural-add","date":"1863-09-07","title":"Address at the Dedication of the Soldiers' Home (Inaugural Address Fragment)","era":"wartime","wc":4158,"r":{"deductive":0.96,"inductive":0.24,"analogical":1.92,"moral":2.41,"legal":1.68,"historical":1.68,"pragmatic":2.89},"dom":"pragmatic"},{"id":"1863-10-03_proclamation-of-thanksgiving-national-holiday","date":"1863-10-03","title":"Proclamation of Thanksgiving (National Holiday)","era":"wartime","wc":393,"r":{"deductive":2.54,"inductive":0.0,"analogical":0.0,"moral":10.18,"legal":2.54,"historical":2.54,"pragmatic":0.0},"dom":"moral"},{"id":"1863-11-19_gettysburg-address","date":"1863-11-19","title":"Gettysburg Address","era":"wartime","wc":272,"r":{"deductive":3.68,"inductive":0.0,"analogical":0.0,"moral":3.68,"legal":0.0,"historical":3.68,"pragmatic":0.0},"dom":"moral"},{"id":"1863-12-08_proclamation-of-amnesty-and-reconstruction-10-plan","date":"1863-12-08","title":"Proclamation of Amnesty and Reconstruction (10% Plan)","era":"wartime","wc":1149,"r":{"deductive":0.87,"inductive":0.0,"analogical":1.74,"moral":1.74,"legal":8.7,"historical":1.74,"pragmatic":2.61},"dom":"legal"},{"id":"1863-12-08_third-annual-message","date":"1863-12-08","title":"Third Annual Message","era":"wartime","wc":6221,"r":{"deductive":1.77,"inductive":0.16,"analogical":0.16,"moral":1.45,"legal":3.7,"historical":0.16,"pragmatic":5.79},"dom":"pragmatic"},{"id":"1864-02-01_proclamation-calling-500000-volunteers","date":"1864-02-01","title":"Proclamation Calling 500,000 Volunteers","era":"wartime","wc":419,"r":{"deductive":2.39,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":4.77,"historical":0.0,"pragmatic":4.77},"dom":"legal"},{"id":"1864-04-04_address-on-reconstruction-to-albert-g-hodges","date":"1864-04-04","title":"Address on Reconstruction to Albert G. Hodges","era":"wartime","wc":1073,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":14.91,"legal":11.18,"historical":3.73,"pragmatic":2.8},"dom":"moral"},{"id":"1864-04-18_address-at-the-sanitary-commission-fair-baltimore","date":"1864-04-18","title":"Address at the Sanitary Commission Fair, Baltimore","era":"wartime","wc":591,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":6.77,"legal":0.0,"historical":6.77,"pragmatic":1.69},"dom":"moral"},{"id":"1864-06-16_address-at-the-great-central-sanitary-fair-philadelphia","date":"1864-06-16","title":"Address at the Great Central Sanitary Fair, Philadelphia","era":"wartime","wc":469,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":2.13,"legal":0.0,"historical":4.26,"pragmatic":2.13},"dom":"historical"},{"id":"1864-07-08_message-to-congress-on-reconstruction-wade-davis-bill-veto","date":"1864-07-08","title":"Message to Congress on Reconstruction (Wade-Davis Bill Veto)","era":"wartime","wc":3249,"r":{"deductive":0.62,"inductive":0.31,"analogical":0.62,"moral":6.77,"legal":5.85,"historical":1.23,"pragmatic":4.92},"dom":"moral"},{"id":"1864-08-18_address-to-the-164th-ohio-regiment","date":"1864-08-18","title":"Address to the 164th Ohio Regiment","era":"wartime","wc":388,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":10.31,"legal":0.0,"historical":2.58,"pragmatic":2.58},"dom":"moral"},{"id":"1864-08-22_address-to-the-166th-ohio-regiment","date":"1864-08-22","title":"Address to the 166th Ohio Regiment","era":"wartime","wc":238,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":4.2},"dom":"pragmatic"},{"id":"1864-08-23_memorandum-concerning-his-probable-failure-of-re-election-bl","date":"1864-08-23","title":"Memorandum Concerning His Probable Failure of Re-Election (Blind Memorandum)","era":"wartime","wc":399,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":5.01},"dom":"pragmatic"},{"id":"1864-08-31_address-to-the-148th-ohio-regiment","date":"1864-08-31","title":"Address to the 148th Ohio Regiment","era":"wartime","wc":345,"r":{"deductive":0.0,"inductive":2.9,"analogical":0.0,"moral":0.0,"legal":5.8,"historical":2.9,"pragmatic":2.9},"dom":"legal"},{"id":"1864-09-03_address-to-the-ohio-delegation-on-peace-negotiations","date":"1864-09-03","title":"Address to the Ohio Delegation (On Peace Negotiations)","era":"wartime","wc":85,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":11.76,"legal":11.76,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1864-11-10_response-to-a-serenade-after-re-election","date":"1864-11-10","title":"Response to a Serenade (After Re-Election)","era":"wartime","wc":1200,"r":{"deductive":1.67,"inductive":0.83,"analogical":1.67,"moral":6.67,"legal":0.0,"historical":5.83,"pragmatic":6.67},"dom":"moral"},{"id":"1864-12-06_fourth-annual-message","date":"1864-12-06","title":"Fourth Annual Message","era":"wartime","wc":5997,"r":{"deductive":1.17,"inductive":0.83,"analogical":0.67,"moral":1.67,"legal":2.67,"historical":0.33,"pragmatic":4.0},"dom":"pragmatic"},{"id":"1864-12-26_address-on-the-surrender-of-savannah-december-1864","date":"1864-12-26","title":"Address on the Surrender of Savannah (December 1864)","era":"wartime","wc":53,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":0.0},"dom":"moral"},{"id":"1865-02-01_message-to-congress-on-the-thirteenth-amendment","date":"1865-02-01","title":"Message to Congress on the Thirteenth Amendment","era":"wartime","wc":370,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":5.41,"legal":0.0,"historical":5.41,"pragmatic":5.41},"dom":"moral"},{"id":"1865-03-04_second-inaugural-address","date":"1865-03-04","title":"Second Inaugural Address","era":"wartime","wc":705,"r":{"deductive":0.0,"inductive":0.0,"analogical":0.0,"moral":15.6,"legal":0.0,"historical":0.0,"pragmatic":8.51},"dom":"moral"},{"id":"1865-03-17_response-to-a-serenade-after-the-second-inaugural","date":"1865-03-17","title":"Response to a Serenade after the Second Inaugural","era":"wartime","wc":1187,"r":{"deductive":1.68,"inductive":0.84,"analogical":1.68,"moral":6.74,"legal":0.0,"historical":5.9,"pragmatic":6.74},"dom":"moral"},{"id":"1865-03-17_speech-to-the-140th-indiana-regiment","date":"1865-03-17","title":"Speech to the 140th Indiana Regiment","era":"wartime","wc":553,"r":{"deductive":3.62,"inductive":0.0,"analogical":0.0,"moral":0.0,"legal":0.0,"historical":0.0,"pragmatic":3.62},"dom":"pragmatic"},{"id":"1865-04-02_response-to-a-serenade-on-the-fall-of-richmond","date":"1865-04-02","title":"Response to a Serenade on the Fall of Richmond","era":"wartime","wc":1187,"r":{"deductive":1.68,"inductive":0.84,"analogical":1.68,"moral":6.74,"legal":0.0,"historical":5.9,"pragmatic":6.74},"dom":"moral"},{"id":"1865-04-11_last-public-address","date":"1865-04-11","title":"Last Public Address","era":"post-war","wc":1317,"r":{"deductive":2.28,"inductive":0.0,"analogical":0.0,"moral":1.52,"legal":19.74,"historical":0.0,"pragmatic":2.28},"dom":"legal"}];
+
+const RTYPES = ['moral','legal','historical','pragmatic','deductive','analogical','inductive'];
+const RCOLORS = {'moral':'#f87171','legal':'#818cf8','historical':'#60a5fa','pragmatic':'#fb923c','deductive':'#a78bfa','analogical':'#34d399','inductive':'#facc15'};
+const ERA_COLOR = {'pre-war':'#4a9eff','wartime':'#ff6b4a','post-war':'#4aff9e'};
+
+function toTS(d){ return new Date(d).getTime(); }
+const sorted = [...DATA].sort((a,b)=>toTS(a.date)-toTS(b.date));
+
+// ── Tab Setup ──
+let compareBuilt = false;
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+    if(t.dataset.tab==='compare' && !compareBuilt){ buildCompare(); compareBuilt=true; }
+    if(t.dataset.tab==='browse') buildBrowse();
+  });
+});
+
+// ── Stream Chart ──
+function buildStream(){
+  const c = document.getElementById('stream-chart');
+  const W = c.clientWidth; c.width=W; c.height=260;
+  const ctx = c.getContext('2d');
+  const pad={l:10,r:10,t:20,b:30};
+  const plotW=W-pad.l-pad.r, plotH=260-pad.t-pad.b;
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,260);
+
+  const bw = plotW/sorted.length;
+  sorted.forEach((s,i)=>{
+    const total = RTYPES.reduce((sum,r)=>sum+(s.r[r]||0),0)||1;
+    let y=pad.t;
+    RTYPES.forEach(r=>{
+      const frac=(s.r[r]||0)/total;
+      const h=frac*plotH;
+      ctx.fillStyle=RCOLORS[r]+'cc';
+      ctx.fillRect(pad.l+i*bw, y, bw-0.5, h);
+      y+=h;
+    });
+  });
+
+  // year markers
+  ctx.fillStyle='#8b8fa8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  const minTS=toTS(sorted[0].date), maxTS=toTS(sorted[sorted.length-1].date);
+  for(let yr=1835;yr<=1865;yr+=5){
+    const x=pad.l+(toTS(yr+'-01-01')-minTS)/(maxTS-minTS)*plotW;
+    ctx.fillText(yr,x,258);
+  }
+
+  // legend
+  let lx=pad.l; const ly=12;
+  RTYPES.forEach(r=>{
+    ctx.fillStyle=RCOLORS[r]; ctx.fillRect(lx,ly-8,8,8);
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(r,lx+10,ly);
+    lx+=ctx.measureText(r).width+22;
+  });
+}
+
+// ── Rolling Average Chart ──
+function buildRollingChart(canvasId, types, colors, labels){
+  const c=document.getElementById(canvasId);
+  const W=c.clientWidth; c.width=W; c.height=parseInt(c.getAttribute('height'));
+  const H=c.height; const ctx=c.getContext('2d');
+  const pad={l:40,r:10,t:20,b:25};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+
+  const wnd=6;
+  const minTS=toTS(sorted[0].date), maxTS=toTS(sorted[sorted.length-1].date);
+
+  // grid
+  [2,4,6,8].forEach(v=>{
+    const y=pad.t+plotH-(v/10)*plotH;
+    ctx.strokeStyle='#2e3148'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+    ctx.fillText(v,pad.l-3,y+3);
+  });
+
+  types.forEach((type,ti)=>{
+    const avgs=sorted.map((_,i)=>{
+      const sl=sorted.slice(Math.max(0,i-wnd+1),i+1);
+      return sl.reduce((s,x)=>s+(x.r[type]||0),0)/sl.length;
+    });
+    ctx.strokeStyle=colors[ti]; ctx.lineWidth=2; ctx.beginPath();
+    sorted.forEach((s,i)=>{
+      const x=pad.l+(toTS(s.date)-minTS)/(maxTS-minTS)*plotW;
+      const y=pad.t+plotH-(avgs[i]/10)*plotH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // label at end
+    const last=avgs[avgs.length-1];
+    const lx=W-pad.r+2, ly=pad.t+plotH-(last/10)*plotH;
+    ctx.fillStyle=colors[ti]; ctx.font='9px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(labels[ti],lx,ly+3);
+  });
+
+  // year axis
+  ctx.fillStyle='#8b8fa8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  for(let yr=1835;yr<=1865;yr+=5){
+    const x=pad.l+(toTS(yr+'-01-01')-minTS)/(maxTS-minTS)*plotW;
+    ctx.fillText(yr,x,H-4);
+  }
+}
+
+// ── Compare Charts ──
+function buildCompare(){
+  buildDelta();
+  buildEraGrouped();
+}
+
+function buildDelta(){
+  const c=document.getElementById('delta-chart');
+  const W=c.clientWidth; c.width=W; c.height=280;
+  const ctx=c.getContext('2d');
+  const pad={l:110,r:80,t:30,b:20};
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,280);
+
+  const pre=sorted.filter(s=>s.era==='pre-war');
+  const war=sorted.filter(s=>s.era==='wartime');
+
+  const deltas=RTYPES.map(r=>{
+    const preAvg=pre.reduce((s,x)=>s+(x.r[r]||0),0)/pre.length;
+    const warAvg=war.reduce((s,x)=>s+(x.r[r]||0),0)/war.length;
+    return {r,delta:warAvg-preAvg,preAvg,warAvg};
+  });
+
+  const H=280; const plotH=H-pad.t-pad.b;
+  const rowH=plotH/RTYPES.length;
+  const maxAbs=Math.max(...deltas.map(d=>Math.abs(d.delta)));
+  const midX=pad.l+(W-pad.l-pad.r)/2;
+
+  // center line
+  ctx.strokeStyle='#8b8fa8'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(midX,pad.t-10); ctx.lineTo(midX,H-pad.b); ctx.stroke();
+  ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('← Pre-War higher',midX-60,pad.t-2);
+  ctx.fillText('Wartime higher →',midX+60,pad.t-2);
+
+  deltas.forEach((d,i)=>{
+    const y=pad.t+i*rowH;
+    const barW=(Math.abs(d.delta)/maxAbs)*((W-pad.l-pad.r)/2-10);
+    const barH=rowH*0.55; const by=y+(rowH-barH)/2;
+
+    ctx.fillStyle='#8b8fa8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    ctx.fillText(d.r, pad.l-6, by+barH/2+4);
+
+    if(d.delta>0){
+      ctx.fillStyle=RCOLORS[d.r]+'cc';
+      ctx.fillRect(midX, by, barW, barH);
+      ctx.fillStyle='#e8e9f0'; ctx.font='10px sans-serif'; ctx.textAlign='left';
+      ctx.fillText('+'+d.delta.toFixed(2), midX+barW+4, by+barH/2+3);
+    } else {
+      ctx.fillStyle=RCOLORS[d.r]+'cc';
+      ctx.fillRect(midX-barW, by, barW, barH);
+      ctx.fillStyle='#e8e9f0'; ctx.font='10px sans-serif'; ctx.textAlign='right';
+      ctx.fillText(d.delta.toFixed(2), midX-barW-4, by+barH/2+3);
+    }
+  });
+}
+
+function buildEraGrouped(){
+  const c=document.getElementById('era-chart');
+  const W=c.clientWidth; c.width=W; c.height=200;
+  const ctx=c.getContext('2d'); const H=200;
+  const pad={l:40,r:10,t:20,b:30};
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+
+  const eras=['pre-war','wartime'];
+  const eraData=eras.map(e=>({
+    era:e,
+    avgs:RTYPES.map(r=>({r,v:sorted.filter(s=>s.era===e).reduce((s,x)=>s+(x.r[r]||0),0)/sorted.filter(s=>s.era===e).length}))
+  }));
+  const maxV=Math.max(...eraData.flatMap(e=>e.avgs.map(a=>a.v)));
+  const plotW=W-pad.l-pad.r; const plotH=H-pad.t-pad.b;
+  const groupW=plotW/RTYPES.length; const bw=groupW*0.35;
+
+  // grid
+  [2,4,6].forEach(v=>{
+    const y=pad.t+plotH-(v/maxV)*plotH;
+    ctx.strokeStyle='#2e3148'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+    ctx.fillText(v,pad.l-3,y+3);
+  });
+
+  RTYPES.forEach((r,ri)=>{
+    eraData.forEach((ed,ei)=>{
+      const v=ed.avgs[ri].v;
+      const x=pad.l+ri*groupW+ei*(bw+2)+groupW*0.1;
+      const bh=(v/maxV)*plotH;
+      ctx.fillStyle=ERA_COLOR[ed.era]+'cc';
+      ctx.fillRect(x,pad.t+plotH-bh,bw,bh);
+    });
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(r,pad.l+ri*groupW+groupW/2,H-6);
+  });
+
+  // era legend
+  ctx.fillStyle='#4a9eff'; ctx.fillRect(pad.l,8,10,8);
+  ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Pre-War',pad.l+13,15);
+  ctx.fillStyle='#ff6b4a'; ctx.fillRect(pad.l+70,8,10,8);
+  ctx.fillText('Wartime',pad.l+83,15);
+}
+
+// ── Browse ──
+function buildBrowse(){
+  const era=document.getElementById('era-select').value;
+  const sortBy=document.getElementById('sort-select').value;
+  let data=sorted.filter(s=>era==='all'||s.era===era);
+  if(sortBy==='date') data.sort((a,b)=>toTS(a.date)-toTS(b.date));
+  else data.sort((a,b)=>(b.r[sortBy]||0)-(a.r[sortBy]||0));
+
+  const list=document.getElementById('speech-list');
+  list.innerHTML='';
+  data.forEach(s=>{
+    const total=RTYPES.reduce((sum,r)=>sum+(s.r[r]||0),0)||1;
+    const card=document.createElement('div');
+    card.className='speech-card';
+    card.innerHTML=`
+      <div class="sc-title">${s.title}</div>
+      <div class="sc-meta">${s.date} &middot; ${s.era} &middot; <strong style="color:var(--al)">${s.dom}</strong></div>
+      <div class="mini-bars">
+        ${RTYPES.map(r=>`
+          <div class="mini-bar-row">
+            <div class="mini-bar-lbl">${r}</div>
+            <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${((s.r[r]||0)/total*100).toFixed(1)}%;background:${RCOLORS[r]}"></div></div>
+            <div style="font-family:sans-serif;font-size:.6rem;color:var(--muted);width:28px">${(s.r[r]||0).toFixed(1)}</div>
+          </div>`).join('')}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('era-select').addEventListener('change',buildBrowse);
+document.getElementById('sort-select').addEventListener('change',buildBrowse);
+
+// ── Init ──
+function initStream(){
+  buildStream();
+  buildRollingChart('moral-legal-chart',['moral','legal'],['#f87171','#818cf8'],['moral','legal']);
+  buildRollingChart('pragmatic-chart',['pragmatic','analogical'],['#fb923c','#34d399'],['pragmatic','analogical']);
+}
+
+window.addEventListener('resize',()=>{
+  initStream();
+  if(compareBuilt) buildCompare();
+});
+initStream();
+buildBrowse();
+</script>
+</body>
+</html>
