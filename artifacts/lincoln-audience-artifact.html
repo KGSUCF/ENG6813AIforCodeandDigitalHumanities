@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln: Audience Targeting</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3148;--text:#e8e9f0;--muted:#8b8fa8;--accent:#c9a84c;--al:#f0c96a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Georgia,serif;min-height:100vh}
+.hero{background:linear-gradient(160deg,#12151f,#1a1d27 60%,#0f1117);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;text-align:center}
+.eyebrow{font-family:sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);margin-bottom:.8rem}
+h1{font-size:clamp(1.6rem,3.5vw,2.6rem);color:var(--al);margin-bottom:.5rem}
+.sub{font-family:sans-serif;font-size:.95rem;color:var(--muted);max-width:620px;margin:0 auto;line-height:1.6}
+.tabs{display:flex;border-bottom:2px solid var(--border);background:var(--surface);padding:0 1.5rem;overflow-x:auto}
+.tab{font-family:sans-serif;font-size:.82rem;padding:.8rem 1.2rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab.active{color:var(--al);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+.panel.active{display:block}
+.section-label{font-family:sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1.2rem}
+canvas{display:block;width:100%}
+.chart-note{font-family:sans-serif;font-size:.72rem;color:var(--muted);margin-top:.5rem;line-height:1.5}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.spotlight{background:var(--surface2);border:1px solid var(--accent);border-radius:6px;padding:1.2rem;margin-top:1.2rem}
+.spotlight h3{color:var(--al);font-size:1rem;margin-bottom:.5rem}
+.spotlight p{font-family:sans-serif;font-size:.82rem;color:var(--muted);line-height:1.6}
+.spotlight p+p{margin-top:.5rem}
+.pronoun-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem}
+.p-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem}
+.p-card h4{font-family:sans-serif;font-size:.78rem;color:var(--al);margin-bottom:.6rem}
+.p-bar-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
+.p-bar-lbl{font-family:sans-serif;font-size:.7rem;color:var(--muted);width:24px}
+.p-bar-track{flex:1;background:var(--surface2);border-radius:2px;height:8px}
+.p-bar-fill{height:100%;border-radius:2px}
+.p-bar-val{font-family:sans-serif;font-size:.68rem;color:var(--muted);width:30px;text-align:right}
+.aud-filter{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.aud-btn{font-family:sans-serif;font-size:.72rem;padding:.3rem .8rem;border-radius:12px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .2s}
+.aud-btn.active,.aud-btn:hover{border-color:var(--accent);color:var(--al)}
+.speech-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.8rem}
+.speech-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem}
+.sc-title{color:var(--al);font-size:.88rem;margin-bottom:.25rem}
+.sc-meta{font-family:sans-serif;font-size:.7rem;color:var(--muted);margin-bottom:.6rem}
+.mini-stat-row{display:flex;gap:.6rem;flex-wrap:wrap}
+.mini-stat{font-family:sans-serif;font-size:.7rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.2rem .5rem}
+.mini-stat strong{color:var(--al)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+@media(max-width:600px){.about-grid{grid-template-columns:1fr}}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem}
+.about-card h3{font-family:sans-serif;font-size:.82rem;color:var(--al);margin-bottom:.5rem}
+.about-card p{font-family:sans-serif;font-size:.78rem;color:var(--muted);line-height:1.6}
+.about-card p+p{margin-top:.4rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Computational Rhetoric &mdash; Lincoln Corpus</div>
+  <h1>How Lincoln Changed His Voice: Audience Targeting</h1>
+  <p class="sub">Lincoln averaged 21-word sentences for soldiers and 40-word sentences for the general public. This tool maps how sentence structure, vocabulary, formality, and pronoun choice shifted depending on who was in the room.</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="compare">Audience Comparison</div>
+  <div class="tab" data-tab="scatter">Complexity vs. Audience</div>
+  <div class="tab" data-tab="pronouns">Pronoun Strategy</div>
+  <div class="tab" data-tab="browse">Browse by Audience</div>
+  <div class="tab" data-tab="about">About</div>
+</div>
+
+<div id="compare" class="panel active">
+  <div class="section-label">Average Sentence Length by Audience Type</div>
+  <div class="chart-wrap">
+    <canvas id="sl-chart" height="200"></canvas>
+    <p class="chart-note">Average words per sentence, by audience category. The gap between military addresses (short, declarative) and general public speeches (long, elaborated) is the largest single stylistic divide in the corpus.</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="section-label">Reading Level (FK Grade) by Audience</div>
+      <div class="chart-wrap">
+        <canvas id="fk-aud-chart" height="200"></canvas>
+        <p class="chart-note">Flesch-Kincaid grade level averages. Congress receives the highest-complexity speeches; military the lowest.</p>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Vocabulary Richness by Audience</div>
+      <div class="chart-wrap">
+        <canvas id="vocab-chart" height="200"></canvas>
+        <p class="chart-note">Type-token ratio — unique words as a fraction of total words. Higher = more varied vocabulary. Civic organizations and political rallies score highest.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="scatter" class="panel">
+  <div class="section-label">Sentence Length vs. Flesch-Kincaid Grade — by Audience</div>
+  <div class="chart-wrap">
+    <canvas id="scatter-chart" height="380"></canvas>
+    <p class="chart-note">Each dot is one speech. Position = sentence length (x) vs. reading level (y). Color = audience type. The military cluster (bottom left) is clearly distinct from the congressional cluster (top right).</p>
+  </div>
+</div>
+
+<div id="pronouns" class="panel">
+  <div class="section-label">Pronoun Use Per 1,000 Words — by Audience</div>
+  <div class="chart-wrap">
+    <canvas id="pronoun-chart" height="240"></canvas>
+    <p class="chart-note">Average frequency of we, you, they, and I per 1,000 words, grouped by audience. "We" dominates addresses to soldiers and the general public; "you" is rare; "I" is suppressed in major speeches.</p>
+  </div>
+  <div class="pronoun-grid" id="pronoun-cards"></div>
+  <div class="spotlight">
+    <h3>The Gettysburg Address: A Pronoun Anomaly</h3>
+    <p>The Gettysburg Address is the most extreme case in the corpus: <strong style="color:var(--al)">we = 55.1 per 1,000 words, I = 0.0</strong>. Lincoln effaces himself entirely while speaking in the plural voice of the nation. This is not accidental — the speech is about collective sacrifice and shared purpose, not presidential authority.</p>
+    <p>Compare the Second Inaugural: I = 1.4, they = 2.8, we = 14.3. As the war nears its end, Lincoln allows a first-person voice to reappear, but still keeps himself subordinate to the collective we and the referenced they — the South — he is addressing indirectly.</p>
+    <p>These pronoun patterns were surfaced by computational analysis of the full corpus. They would be difficult to notice through reading alone, but they reward close attention once identified: they reveal the degree to which Lincoln's rhetoric is consistently oriented outward, toward the audience and the nation, rather than inward toward the speaker.</p>
+  </div>
+</div>
+
+<div id="browse" class="panel">
+  <div class="aud-filter" id="aud-filter">
+    <button class="aud-btn active" data-aud="all">All</button>
+    <button class="aud-btn" data-aud="General Public">General Public</button>
+    <button class="aud-btn" data-aud="Congress">Congress</button>
+    <button class="aud-btn" data-aud="Political Rally">Political Rally</button>
+    <button class="aud-btn" data-aud="Military/Soldiers">Military/Soldiers</button>
+    <button class="aud-btn" data-aud="Civic Organization">Civic Organization</button>
+  </div>
+  <div class="speech-list" id="browse-list"></div>
+</div>
+
+<div id="about" class="panel">
+  <div class="section-label" style="margin-bottom:1rem">About This Analysis</div>
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>What "Audience" Means Here</h3>
+      <p>Speeches were categorized by their primary intended audience based on historical context: Congress (State of the Union messages, special messages), General Public (major addresses, inaugural speeches), Political Rally (campaign and party addresses), Military/Soldiers (orders, addresses to troops), and Civic Organization (dedications, society addresses).</p>
+    </div>
+    <div class="about-card">
+      <h3>Sentence Length as a Signal</h3>
+      <p>Average sentence length is one of the most reliable stylistic signals in this corpus. Military addresses run short — Lincoln is giving orders or acknowledging service. Congressional messages run long — Lincoln is building legal arguments. The difference (21 vs. 40 words) is not about the complexity of Lincoln's thought; it is about the constraints of the communicative situation.</p>
+    </div>
+    <div class="about-card">
+      <h3>What Pronouns Reveal</h3>
+      <p>Pronoun frequency is a blunt instrument, but the patterns here are striking. Lincoln's most celebrated speeches (Gettysburg, Second Inaugural) are also his most self-effacing: I is nearly absent. The speaker disappears into the collective. This is a deliberate rhetorical strategy, not a stylistic accident.</p>
+    </div>
+    <div class="about-card">
+      <h3>Limits of the Analysis</h3>
+      <p>Audience categories simplify real complexity. The Gettysburg Address was delivered to soldiers, families, politicians, and journalists simultaneously. "General Public" covers speeches that ranged from massive outdoor rallies to small indoor meetings. Formality scores are derived from vocabulary patterns and may not capture the full range of register shifts within individual speeches.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"id":"1832-03-09_communication-to-the-people-of-sangamon-county-first-politic","date":"1832-03-09","title":"Communication to the People of Sangamon County (First Political Announcement)","era":"pre-war","aud":"General Public","wc":17095,"fk":14.7,"sl":32.7,"wl":4.77,"vr":0.544,"fs":-11.0,"pr":{"we":0.0,"you":0.0,"they":5.0,"i":0.0}},{"id":"1837-01-11_address-to-the-people-of-illinois-on-the-state-bank","date":"1837-01-11","title":"Address to the People of Illinois on the State Bank","era":"pre-war","aud":"General Public","wc":15602,"fk":14.6,"sl":27.6,"wl":4.75,"vr":0.526,"fs":-3.0,"pr":{"we":0.0,"you":0.0,"they":9.1,"i":0.0}},{"id":"1837-03-03_protest-against-slavery-in-the-illinois-legislature","date":"1837-03-03","title":"Protest against Slavery in the Illinois Legislature","era":"pre-war","aud":"General Public","wc":16873,"fk":14.7,"sl":32.8,"wl":4.73,"vr":0.52,"fs":-10.0,"pr":{"we":0.0,"you":0.0,"they":4.9,"i":0.0}},{"id":"1838-01-27_the-perpetuation-of-our-political-institutions-lyceum-addres","date":"1838-01-27","title":"The Perpetuation of Our Political Institutions (Lyceum Address)","era":"pre-war","aud":"General Public","wc":3552,"fk":12.1,"sl":29.7,"wl":4.51,"vr":0.526,"fs":-9.0,"pr":{"we":28.5,"you":1.0,"they":14.3,"i":5.7}},{"id":"1839-12-26_address-on-the-sub-treasury-first-political-speech-against-d","date":"1839-12-26","title":"Address on the Sub-Treasury (First Political Speech against Democrats)","era":"pre-war","aud":"General Public","wc":11082,"fk":15.0,"sl":35.5,"wl":4.99,"vr":0.474,"fs":2.0,"pr":{"we":0.0,"you":0.0,"they":4.2,"i":1.0}},{"id":"1839-12-29_address-on-the-sub-treasury-second-political-speech","date":"1839-12-29","title":"Address on the Sub-Treasury (Second Political Speech)","era":"pre-war","aud":"General Public","wc":764,"fk":16.7,"sl":40.1,"wl":4.91,"vr":0.458,"fs":0.0,"pr":{"we":11.8,"you":2.6,"they":5.2,"i":0.0}},{"id":"1841-07-01_eulogy-on-president-william-henry-harrison","date":"1841-07-01","title":"Eulogy on President William Henry Harrison","era":"pre-war","aud":"Civic Organization","wc":1520,"fk":11.8,"sl":31.0,"wl":4.39,"vr":0.492,"fs":-4.0,"pr":{"we":0.0,"you":1.9,"they":14.9,"i":0.9}},{"id":"1842-02-22_address-to-the-washington-temperance-society","date":"1842-02-22","title":"Address to the Washington Temperance Society","era":"pre-war","aud":"General Public","wc":3894,"fk":11.1,"sl":31.0,"wl":4.46,"vr":0.52,"fs":-13.0,"pr":{"we":3.8,"you":5.7,"they":18.9,"i":1.9}},{"id":"1847-12-22_spot-resolutions-speech-on-the-mexican-war","date":"1847-12-22","title":"Spot Resolutions (Speech on the Mexican War)","era":"pre-war","aud":"General Public","wc":603,"fk":16.9,"sl":66.2,"wl":4.55,"vr":0.384,"fs":3.33,"pr":{"we":24.9,"you":0.0,"they":8.3,"i":0.0}},{"id":"1848-01-12_speech-on-the-mexican-american-war","date":"1848-01-12","title":"Speech on the Mexican-American War","era":"pre-war","aud":"General Public","wc":4893,"fk":13.2,"sl":33.1,"wl":4.42,"vr":0.476,"fs":-6.0,"pr":{"we":6.6,"you":0.0,"they":3.8,"i":23.5}},{"id":"1848-06-20_speech-on-internal-improvements","date":"1848-06-20","title":"Speech on Internal Improvements","era":"pre-war","aud":"General Public","wc":14533,"fk":14.6,"sl":29.8,"wl":4.72,"vr":0.564,"fs":-1.0,"pr":{"we":1.0,"you":0.0,"they":17.5,"i":0.0}},{"id":"1848-07-27_speech-in-the-us-house-on-the-presidential-question","date":"1848-07-27","title":"Speech in the U.S. House on the Presidential Question","era":"pre-war","aud":"Congress","wc":490,"fk":11.4,"sl":24.4,"wl":4.75,"vr":0.471,"fs":0.0,"pr":{"we":8.2,"you":0.0,"they":14.3,"i":8.2}},{"id":"1848-09-12_campaign-speech-for-zachary-taylor-at-worcester-massachusett","date":"1848-09-12","title":"Campaign Speech for Zachary Taylor at Worcester, Massachusetts","era":"pre-war","aud":"Political Rally","wc":1546,"fk":9.6,"sl":25.2,"wl":4.54,"vr":0.44,"fs":-12.0,"pr":{"we":10.5,"you":0.0,"they":19.0,"i":0.0}},{"id":"1848-09-15_campaign-speech-for-zachary-taylor-at-boston","date":"1848-09-15","title":"Campaign Speech for Zachary Taylor at Boston","era":"pre-war","aud":"Political Rally","wc":65,"fk":null,"sl":10.8,"wl":4.37,"vr":0.81,"fs":0.0,"pr":{"we":0.0,"you":30.8,"they":0.0,"i":46.2}},{"id":"1850-07-25_eulogy-on-zachary-taylor","date":"1850-07-25","title":"Eulogy on Zachary Taylor","era":"pre-war","aud":"Civic Organization","wc":5429,"fk":10.5,"sl":25.9,"wl":4.45,"vr":0.53,"fs":-14.0,"pr":{"we":10.5,"you":0.0,"they":9.5,"i":1.9}},{"id":"1852-07-06_eulogy-on-henry-clay","date":"1852-07-06","title":"Eulogy on Henry Clay","era":"pre-war","aud":"Civic Organization","wc":10874,"fk":10.5,"sl":26.4,"wl":4.44,"vr":0.528,"fs":-14.0,"pr":{"we":11.3,"you":0.0,"they":10.4,"i":1.9}},{"id":"1854-10-04_speech-on-the-kansas-nebraska-act-at-springfield","date":"1854-10-04","title":"Speech on the Kansas-Nebraska Act at Springfield","era":"pre-war","aud":"General Public","wc":15646,"fk":14.7,"sl":28.1,"wl":4.76,"vr":0.528,"fs":-3.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1854-10-16_at-peoria-illinois","date":"1854-10-16","title":"At Peoria, Illinois","era":"pre-war","aud":"General Public","wc":33424,"fk":10.1,"sl":26.5,"wl":4.72,"vr":0.506,"fs":-15.0,"pr":{"we":10.9,"you":0.0,"they":14.8,"i":12.8}},{"id":"1856-05-29_speech-at-bloomington-illinois-the-lost-speech","date":"1856-05-29","title":"Speech at Bloomington, Illinois (The Lost Speech)","era":"pre-war","aud":"Political Rally","wc":67,"fk":null,"sl":16.8,"wl":5.31,"vr":0.766,"fs":-15.38,"pr":{"we":0.0,"you":0.0,"they":14.9,"i":0.0}},{"id":"1856-07-23_speech-at-galena-illinois","date":"1856-07-23","title":"Speech at Galena, Illinois","era":"pre-war","aud":"Political Rally","wc":661,"fk":7.4,"sl":16.9,"wl":4.31,"vr":0.392,"fs":-1.54,"pr":{"we":40.8,"you":30.3,"they":0.0,"i":6.1}},{"id":"1856-08-27_speech-at-kalamazoo-michigan","date":"1856-08-27","title":"Speech at Kalamazoo, Michigan","era":"pre-war","aud":"Political Rally","wc":4893,"fk":13.2,"sl":33.1,"wl":4.42,"vr":0.476,"fs":-6.0,"pr":{"we":6.6,"you":0.0,"they":3.8,"i":23.5}},{"id":"1858-06-16_a-house-divided-speech","date":"1858-06-16","title":"A House Divided Speech","era":"pre-war","aud":"Congress","wc":3214,"fk":11.3,"sl":34.5,"wl":4.61,"vr":0.49,"fs":-8.0,"pr":{"we":8.7,"you":0.0,"they":4.8,"i":4.8}},{"id":"1858-07-10_speech-at-chicago-reply-to-douglas","date":"1858-07-10","title":"Speech at Chicago (Reply to Douglas)","era":"pre-war","aud":"Political Rally","wc":8282,"fk":10.7,"sl":30.5,"wl":4.16,"vr":0.488,"fs":-12.0,"pr":{"we":9.9,"you":3.6,"they":8.1,"i":37.8}},{"id":"1858-07-17_speech-at-springfield-reply-to-douglas","date":"1858-07-17","title":"Speech at Springfield (Reply to Douglas)","era":"pre-war","aud":"Political Rally","wc":7935,"fk":10.4,"sl":26.9,"wl":4.52,"vr":0.416,"fs":-9.0,"pr":{"we":33.9,"you":1.0,"they":9.7,"i":10.6}},{"id":"1858-08-17_speech-at-lewistown-illinois","date":"1858-08-17","title":"Speech at Lewistown, Illinois","era":"pre-war","aud":"Political Rally","wc":8282,"fk":10.7,"sl":30.5,"wl":4.16,"vr":0.488,"fs":-12.0,"pr":{"we":9.9,"you":3.6,"they":8.1,"i":37.8}},{"id":"1858-08-21_lincoln-douglas-debate-no-1-ottawa-illinois","date":"1858-08-21","title":"Lincoln-Douglas Debate No. 1 \u2014 Ottawa, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-08-27_lincoln-douglas-debate-no-2-freeport-illinois","date":"1858-08-27","title":"Lincoln-Douglas Debate No. 2 \u2014 Freeport, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-08-31_speech-at-carlinville-illinois","date":"1858-08-31","title":"Speech at Carlinville, Illinois","era":"pre-war","aud":"Political Rally","wc":29,"fk":null,"sl":14.5,"wl":5.85,"vr":0,"fs":-35.71,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1858-09-11_speech-at-edwardsville-illinois","date":"1858-09-11","title":"Speech at Edwardsville, Illinois","era":"pre-war","aud":"Political Rally","wc":1003,"fk":13.9,"sl":35.7,"wl":4.47,"vr":0.448,"fs":-3.0,"pr":{"we":13.0,"you":18.9,"they":14.0,"i":16.9}},{"id":"1858-09-15_lincoln-douglas-debate-no-3-jonesboro-illinois","date":"1858-09-15","title":"Lincoln-Douglas Debate No. 3 \u2014 Jonesboro, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-09-18_lincoln-douglas-debate-no-4-charleston-illinois","date":"1858-09-18","title":"Lincoln-Douglas Debate No. 4 \u2014 Charleston, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-10-07_lincoln-douglas-debate-no-5-galesburg-illinois","date":"1858-10-07","title":"Lincoln-Douglas Debate No. 5 \u2014 Galesburg, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-10-11_speech-at-monmouth-illinois","date":"1858-10-11","title":"Speech at Monmouth, Illinois","era":"pre-war","aud":"Political Rally","wc":17,"fk":null,"sl":8.5,"wl":5.73,"vr":0,"fs":-62.5,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1858-10-13_lincoln-douglas-debate-no-6-quincy-illinois","date":"1858-10-13","title":"Lincoln-Douglas Debate No. 6 \u2014 Quincy, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1858-10-15_lincoln-douglas-debate-no-7-alton-illinois","date":"1858-10-15","title":"Lincoln-Douglas Debate No. 7 \u2014 Alton, Illinois","era":"pre-war","aud":"Political Rally","wc":15118,"fk":14.7,"sl":29.1,"wl":4.74,"vr":0.482,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.1,"i":0.0}},{"id":"1859-09-16_speech-at-columbus-ohio","date":"1859-09-16","title":"Speech at Columbus, Ohio","era":"pre-war","aud":"Political Rally","wc":11924,"fk":13.9,"sl":34.8,"wl":4.41,"vr":0.462,"fs":-11.0,"pr":{"we":0.9,"you":11.1,"they":4.6,"i":49.1}},{"id":"1859-09-17_speech-at-cincinnati-ohio","date":"1859-09-17","title":"Speech at Cincinnati, Ohio","era":"pre-war","aud":"Political Rally","wc":11183,"fk":11.8,"sl":38.3,"wl":4.18,"vr":0.436,"fs":-10.0,"pr":{"we":8.2,"you":5.5,"they":5.5,"i":38.2}},{"id":"1859-09-17_speech-at-dayton-ohio","date":"1859-09-17","title":"Speech at Dayton, Ohio","era":"pre-war","aud":"Political Rally","wc":18,"fk":null,"sl":9.0,"wl":5.44,"vr":0,"fs":-58.82,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1859-09-17_speech-at-hamilton-ohio","date":"1859-09-17","title":"Speech at Hamilton, Ohio","era":"pre-war","aud":"Political Rally","wc":13,"fk":null,"sl":6.5,"wl":5.55,"vr":0,"fs":-83.33,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1859-09-19_speech-at-indianapolis-indiana","date":"1859-09-19","title":"Speech at Indianapolis, Indiana","era":"pre-war","aud":"Political Rally","wc":180,"fk":null,"sl":25.7,"wl":4.38,"vr":0.6,"fs":-22.35,"pr":{"we":72.2,"you":61.1,"they":0.0,"i":0.0}},{"id":"1859-09-30_address-at-the-wisconsin-state-agricultural-society-milwauke","date":"1859-09-30","title":"Address at the Wisconsin State Agricultural Society (Milwaukee Speech)","era":"pre-war","aud":"General Public","wc":245,"fk":22.0,"sl":245.0,"wl":4.66,"vr":0.608,"fs":4.12,"pr":{"we":12.2,"you":0.0,"they":4.1,"i":0.0}},{"id":"1859-09-30_speech-at-milwaukee-wisconsin","date":"1859-09-30","title":"Speech at Milwaukee, Wisconsin","era":"pre-war","aud":"Political Rally","wc":3894,"fk":11.1,"sl":31.0,"wl":4.46,"vr":0.52,"fs":-13.0,"pr":{"we":3.8,"you":5.7,"they":18.9,"i":1.9}},{"id":"1859-12-01_speech-at-elwood-kansas","date":"1859-12-01","title":"Speech at Elwood, Kansas","era":"pre-war","aud":"Political Rally","wc":3732,"fk":10.7,"sl":29.2,"wl":4.33,"vr":0.46,"fs":6.0,"pr":{"we":8.5,"you":0.0,"they":11.3,"i":23.6}},{"id":"1859-12-02_speech-at-atchison-kansas","date":"1859-12-02","title":"Speech at Atchison, Kansas","era":"pre-war","aud":"Political Rally","wc":3732,"fk":10.7,"sl":29.2,"wl":4.33,"vr":0.46,"fs":6.0,"pr":{"we":8.5,"you":0.0,"they":11.3,"i":23.6}},{"id":"1859-12-02_speech-at-troy-kansas","date":"1859-12-02","title":"Speech at Troy, Kansas","era":"pre-war","aud":"Political Rally","wc":3732,"fk":10.7,"sl":29.2,"wl":4.33,"vr":0.46,"fs":6.0,"pr":{"we":8.5,"you":0.0,"they":11.3,"i":23.6}},{"id":"1859-12-03_speech-at-leavenworth-kansas","date":"1859-12-03","title":"Speech at Leavenworth, Kansas","era":"pre-war","aud":"Political Rally","wc":176,"fk":null,"sl":12.5,"wl":4.41,"vr":0.549,"fs":11.36,"pr":{"we":51.1,"you":45.5,"they":0.0,"i":0.0}},{"id":"1860-02-27_address-at-cooper-union-evening-remarks","date":"1860-02-27","title":"Address at Cooper Union (Evening Remarks)","era":"pre-war","aud":"General Public","wc":3556,"fk":12.0,"sl":29.5,"wl":4.51,"vr":0.524,"fs":-9.0,"pr":{"we":28.6,"you":1.0,"they":14.3,"i":5.7}},{"id":"1860-02-27_cooper-union-address","date":"1860-02-27","title":"Cooper Union Address","era":"pre-war","aud":"General Public","wc":6164,"fk":12.4,"sl":34.2,"wl":4.87,"vr":0.37,"fs":-2.0,"pr":{"we":15.1,"you":0.0,"they":22.2,"i":10.1}},{"id":"1860-03-05_speech-at-hartford-connecticut","date":"1860-03-05","title":"Speech at Hartford, Connecticut","era":"pre-war","aud":"Political Rally","wc":7939,"fk":9.8,"sl":28.0,"wl":4.38,"vr":0.41,"fs":-12.0,"pr":{"we":15.3,"you":1.9,"they":11.5,"i":3.8}},{"id":"1860-03-06_speech-at-new-haven-connecticut","date":"1860-03-06","title":"Speech at New Haven, Connecticut","era":"pre-war","aud":"Political Rally","wc":7939,"fk":9.8,"sl":28.0,"wl":4.38,"vr":0.41,"fs":-12.0,"pr":{"we":15.3,"you":1.9,"they":11.5,"i":3.8}},{"id":"1860-03-08_speech-at-providence-rhode-island","date":"1860-03-08","title":"Speech at Providence, Rhode Island","era":"pre-war","aud":"Political Rally","wc":24,"fk":null,"sl":12.0,"wl":5.59,"vr":0,"fs":-43.48,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1860-05-18_address-at-chicago-after-nomination-acceptance","date":"1860-05-18","title":"Address at Chicago after Nomination (Acceptance)","era":"pre-war","aud":"General Public","wc":3046,"fk":13.5,"sl":26.4,"wl":4.68,"vr":0.522,"fs":-8.0,"pr":{"we":6.8,"you":0.0,"they":9.7,"i":4.8}},{"id":"1860-05-23_reply-to-the-committee-notifying-lincoln-of-his-nomination","date":"1860-05-23","title":"Reply to the Committee Notifying Lincoln of his Nomination","era":"pre-war","aud":"General Public","wc":3136,"fk":13.5,"sl":25.2,"wl":4.66,"vr":0.504,"fs":-7.0,"pr":{"we":6.8,"you":0.0,"they":10.7,"i":4.9}},{"id":"1860-07-10_speech-at-chicago-after-nomination","date":"1860-07-10","title":"Speech at Chicago after Nomination","era":"pre-war","aud":"Political Rally","wc":3046,"fk":13.5,"sl":26.4,"wl":4.68,"vr":0.522,"fs":-8.0,"pr":{"we":6.8,"you":0.0,"they":9.7,"i":4.8}},{"id":"1861-01-31_reply-to-the-governor-and-legislature-of-illinois","date":"1861-01-31","title":"Reply to the Governor and Legislature of Illinois","era":"wartime","aud":"General Public","wc":9095,"fk":15.0,"sl":31.6,"wl":4.68,"vr":0.532,"fs":-5.0,"pr":{"we":3.9,"you":0.0,"they":5.9,"i":2.0}},{"id":"1861-02-11_farewell-address","date":"1861-02-11","title":"Farewell Address","era":"wartime","aud":"General Public","wc":152,"fk":null,"sl":16.9,"wl":4.11,"vr":0.651,"fs":-6.62,"pr":{"we":6.6,"you":32.9,"they":0.0,"i":52.6}},{"id":"1861-02-11_speech-at-indianapolis-indiana","date":"1861-02-11","title":"Speech at Indianapolis, Indiana","era":"wartime","aud":"Political Rally","wc":180,"fk":null,"sl":25.7,"wl":4.38,"vr":0.6,"fs":-22.35,"pr":{"we":72.2,"you":61.1,"they":0.0,"i":0.0}},{"id":"1861-02-13_speech-at-columbus-ohio","date":"1861-02-13","title":"Speech at Columbus, Ohio","era":"wartime","aud":"Political Rally","wc":358,"fk":9.6,"sl":22.4,"wl":4.36,"vr":0.497,"fs":-14.04,"pr":{"we":11.2,"you":2.8,"they":2.8,"i":36.3}},{"id":"1861-02-15_speech-at-cleveland-ohio","date":"1861-02-15","title":"Speech at Cleveland, Ohio","era":"wartime","aud":"Political Rally","wc":479,"fk":6.8,"sl":15.4,"wl":4.27,"vr":0.463,"fs":-12.63,"pr":{"we":6.3,"you":20.9,"they":23.0,"i":14.6}},{"id":"1861-02-15_speech-at-pittsburgh-pennsylvania","date":"1861-02-15","title":"Speech at Pittsburgh, Pennsylvania","era":"wartime","aud":"Political Rally","wc":1232,"fk":13.4,"sl":30.8,"wl":4.57,"vr":0.472,"fs":-6.0,"pr":{"we":6.8,"you":1.0,"they":11.6,"i":22.2}},{"id":"1861-02-18_address-to-the-legislature-of-new-york-at-albany","date":"1861-02-18","title":"Address to the Legislature of New York at Albany","era":"wartime","aud":"General Public","wc":565,"fk":12.7,"sl":33.2,"wl":4.2,"vr":0.412,"fs":-10.73,"pr":{"we":10.6,"you":15.9,"they":1.8,"i":42.5}},{"id":"1861-02-21_address-to-the-new-jersey-general-assembly-at-trenton","date":"1861-02-21","title":"Address to the New Jersey General Assembly at Trenton","era":"wartime","aud":"General Public","wc":1062,"fk":12.2,"sl":27.9,"wl":4.48,"vr":0.514,"fs":-6.0,"pr":{"we":9.5,"you":2.8,"they":11.4,"i":26.6}},{"id":"1861-02-21_address-to-the-new-jersey-senate-at-trenton","date":"1861-02-21","title":"Address to the New Jersey Senate at Trenton","era":"wartime","aud":"Congress","wc":1089,"fk":12.4,"sl":31.0,"wl":4.46,"vr":0.45,"fs":-4.0,"pr":{"we":2.8,"you":8.5,"they":6.6,"i":42.3}},{"id":"1861-02-22_address-at-independence-hall-philadelphia","date":"1861-02-22","title":"Address at Independence Hall, Philadelphia","era":"wartime","aud":"General Public","wc":628,"fk":10.3,"sl":21.7,"wl":4.55,"vr":0.44,"fs":-3.12,"pr":{"we":1.6,"you":1.6,"they":1.6,"i":35.0}},{"id":"1861-02-22_address-to-the-legislature-of-pennsylvania-at-harrisburg","date":"1861-02-22","title":"Address to the Legislature of Pennsylvania at Harrisburg","era":"wartime","aud":"General Public","wc":773,"fk":13.3,"sl":30.9,"wl":4.41,"vr":0.44,"fs":-13.02,"pr":{"we":5.2,"you":12.9,"they":11.6,"i":45.3}},{"id":"1861-03-04_first-inaugural-address","date":"1861-03-04","title":"First Inaugural Address","era":"wartime","aud":"General Public","wc":3636,"fk":12.9,"sl":31.5,"wl":4.61,"vr":0.478,"fs":-12.0,"pr":{"we":4.8,"you":3.8,"they":11.5,"i":18.1}},{"id":"1861-04-15_proclamation-calling-the-militia-and-convening-congress","date":"1861-04-15","title":"Proclamation Calling the Militia and Convening Congress","era":"wartime","aud":"Congress","wc":442,"fk":15.1,"sl":31.5,"wl":4.84,"vr":0.523,"fs":25.11,"pr":{"we":4.5,"you":0.0,"they":6.8,"i":13.6}},{"id":"1861-04-19_proclamation-of-blockade-against-southern-states","date":"1861-04-19","title":"Proclamation of Blockade Against Southern States","era":"wartime","aud":"General Public","wc":9761,"fk":15.1,"sl":40.2,"wl":4.9,"vr":0.554,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":8.2,"i":0.0}},{"id":"1861-04-27_proclamation-of-blockade-against-virginia-and-north-carolina","date":"1861-04-27","title":"Proclamation of Blockade Against Virginia and North Carolina","era":"wartime","aud":"General Public","wc":7002,"fk":15.1,"sl":33.8,"wl":4.62,"vr":0.498,"fs":-7.0,"pr":{"we":1.0,"you":1.0,"they":2.0,"i":4.9}},{"id":"1861-07-04_july-4th-message-to-congress","date":"1861-07-04","title":"July 4th Message to Congress","era":"wartime","aud":"Congress","wc":6286,"fk":14.0,"sl":31.4,"wl":4.79,"vr":0.508,"fs":-2.0,"pr":{"we":1.0,"you":1.0,"they":4.9,"i":0.0}},{"id":"1861-07-08_message-to-congress-requesting-suspension-of-habeas-corpus","date":"1861-07-08","title":"Message to Congress Requesting Suspension of Habeas Corpus","era":"wartime","aud":"Congress","wc":1332,"fk":16.8,"sl":40.4,"wl":4.7,"vr":0.474,"fs":-12.0,"pr":{"we":5.9,"you":1.0,"they":5.9,"i":0.0}},{"id":"1861-08-12_proclamation-of-a-national-fast-day","date":"1861-08-12","title":"Proclamation of a National Fast Day","era":"wartime","aud":"General Public","wc":459,"fk":17.5,"sl":57.0,"wl":4.64,"vr":0.445,"fs":8.77,"pr":{"we":17.4,"you":0.0,"they":10.9,"i":6.5}},{"id":"1861-11-26_message-to-the-senate-and-house-on-compensated-emancipation-","date":"1861-11-26","title":"Message to the Senate and House on Compensated Emancipation in Delaware","era":"wartime","aud":"Congress","wc":2929,"fk":17.2,"sl":45.8,"wl":4.67,"vr":0.486,"fs":6.0,"pr":{"we":1.0,"you":0.0,"they":9.8,"i":6.8}},{"id":"1861-12-03_first-annual-message","date":"1861-12-03","title":"First Annual Message","era":"wartime","aud":"Congress","wc":7052,"fk":15.3,"sl":37.2,"wl":5.01,"vr":0.546,"fs":-7.0,"pr":{"we":18.5,"you":2.1,"they":12.3,"i":10.3}},{"id":"1862-01-17_message-to-the-senate-on-the-trent-affair","date":"1862-01-17","title":"Message to the Senate on the Trent Affair","era":"wartime","aud":"Congress","wc":139,"fk":null,"sl":46.3,"wl":4.14,"vr":0.591,"fs":-7.19,"pr":{"we":0.0,"you":50.4,"they":28.8,"i":64.7}},{"id":"1862-03-06_message-to-the-senate-transmitting-diplomatic-correspondence","date":"1862-03-06","title":"Message to the Senate Transmitting Diplomatic Correspondence on Slavery","era":"wartime","aud":"Congress","wc":103,"fk":null,"sl":20.6,"wl":5.59,"vr":0.683,"fs":0.0,"pr":{"we":0.0,"you":58.3,"they":0.0,"i":9.7}},{"id":"1862-03-06_special-message-to-congress-on-compensated-emancipation","date":"1862-03-06","title":"Special Message to Congress on Compensated Emancipation","era":"wartime","aud":"Congress","wc":2929,"fk":17.2,"sl":45.8,"wl":4.67,"vr":0.486,"fs":6.0,"pr":{"we":1.0,"you":0.0,"they":9.8,"i":6.8}},{"id":"1862-04-16_message-to-congress-on-emancipation-in-washington-dc","date":"1862-04-16","title":"Message to Congress on Emancipation in Washington DC","era":"wartime","aud":"Congress","wc":210,"fk":12.2,"sl":23.3,"wl":4.7,"vr":0.596,"fs":0.0,"pr":{"we":0.0,"you":0.0,"they":4.8,"i":28.6}},{"id":"1862-05-19_proclamation-revoking-general-hunters-emancipation-order","date":"1862-05-19","title":"Proclamation Revoking General Hunter's Emancipation Order","era":"wartime","aud":"General Public","wc":6360,"fk":13.8,"sl":26.9,"wl":4.75,"vr":0.48,"fs":-1.0,"pr":{"we":0.0,"you":0.0,"they":2.0,"i":12.7}},{"id":"1862-07-11_annual-message-to-congress-on-state-of-the-navy","date":"1862-07-11","title":"Annual Message to Congress on State of the Navy","era":"wartime","aud":"Congress","wc":14940,"fk":14.7,"sl":30.1,"wl":4.76,"vr":0.548,"fs":1.0,"pr":{"we":0.0,"you":0.0,"they":7.1,"i":0.0}},{"id":"1862-07-12_address-to-border-state-congressmen","date":"1862-07-12","title":"Address to Border State Congressmen","era":"wartime","aud":"Congress","wc":1066,"fk":8.8,"sl":20.5,"wl":4.36,"vr":0.456,"fs":-8.0,"pr":{"we":6.6,"you":43.2,"they":13.1,"i":25.3}},{"id":"1862-07-14_message-to-congress-on-compensated-emancipation-july","date":"1862-07-14","title":"Message to Congress on Compensated Emancipation (July)","era":"wartime","aud":"Congress","wc":2929,"fk":17.2,"sl":45.8,"wl":4.67,"vr":0.486,"fs":6.0,"pr":{"we":1.0,"you":0.0,"they":9.8,"i":6.8}},{"id":"1862-07-16_address-on-colonization-to-the-senate-and-house","date":"1862-07-16","title":"Address on Colonization to the Senate and House","era":"wartime","aud":"Congress","wc":207,"fk":19.5,"sl":41.4,"wl":4.89,"vr":0.565,"fs":-4.83,"pr":{"we":29.0,"you":9.7,"they":9.7,"i":0.0}},{"id":"1862-08-14_address-to-a-deputation-of-free-black-men-on-colonization","date":"1862-08-14","title":"Address to a Deputation of Free Black Men on Colonization","era":"wartime","aud":"General Public","wc":11387,"fk":15.0,"sl":34.6,"wl":4.96,"vr":0.524,"fs":0.0,"pr":{"we":0.0,"you":0.0,"they":7.2,"i":3.1}},{"id":"1862-08-22_letter-to-horace-greeley-reply-to-prayer-of-twenty-millions","date":"1862-08-22","title":"Letter to Horace Greeley (Reply to 'Prayer of Twenty Millions')","era":"wartime","aud":"General Public","wc":12344,"fk":14.9,"sl":31.1,"wl":4.84,"vr":0.52,"fs":-6.0,"pr":{"we":0.0,"you":0.0,"they":9.9,"i":5.9}},{"id":"1862-09-13_response-to-chicago-clergy-urging-emancipation","date":"1862-09-13","title":"Response to Chicago Clergy Urging Emancipation","era":"wartime","aud":"General Public","wc":1267,"fk":10.4,"sl":24.4,"wl":4.26,"vr":0.498,"fs":-2.0,"pr":{"we":14.5,"you":6.3,"they":19.9,"i":29.9}},{"id":"1862-09-22_preliminary-emancipation-proclamation","date":"1862-09-22","title":"Preliminary Emancipation Proclamation","era":"wartime","aud":"General Public","wc":5169,"fk":14.3,"sl":30.6,"wl":4.8,"vr":0.534,"fs":-11.0,"pr":{"we":1.0,"you":0.0,"they":13.0,"i":0.0}},{"id":"1862-09-24_proclamation-suspending-the-writ-of-habeas-corpus","date":"1862-09-24","title":"Proclamation Suspending the Writ of Habeas Corpus","era":"wartime","aud":"General Public","wc":1332,"fk":16.8,"sl":40.4,"wl":4.7,"vr":0.474,"fs":-12.0,"pr":{"we":5.9,"you":1.0,"they":5.9,"i":0.0}},{"id":"1862-12-01_message-to-congress-recommending-compensated-emancipation-de","date":"1862-12-01","title":"Message to Congress Recommending Compensated Emancipation (December 1862)","era":"wartime","aud":"Congress","wc":2929,"fk":17.2,"sl":45.8,"wl":4.67,"vr":0.486,"fs":6.0,"pr":{"we":1.0,"you":0.0,"they":9.8,"i":6.8}},{"id":"1862-12-01_second-annual-message","date":"1862-12-01","title":"Second Annual Message","era":"wartime","aud":"Congress","wc":8550,"fk":11.9,"sl":32.8,"wl":5.07,"vr":0.524,"fs":-4.0,"pr":{"we":14.3,"you":1.0,"they":7.1,"i":6.1}},{"id":"1863-01-01_annual-message-transmitting-the-emancipation-proclamation-to","date":"1863-01-01","title":"Annual Message Transmitting the Emancipation Proclamation to Congress","era":"wartime","aud":"Congress","wc":242,"fk":6.1,"sl":15.1,"wl":4.23,"vr":0.541,"fs":-21.19,"pr":{"we":0.0,"you":33.1,"they":20.7,"i":16.5}},{"id":"1863-01-01_emancipation-proclamation","date":"1863-01-01","title":"Emancipation Proclamation","era":"wartime","aud":"General Public","wc":713,"fk":20.7,"sl":54.5,"wl":4.82,"vr":0.402,"fs":11.33,"pr":{"we":5.6,"you":0.0,"they":7.0,"i":9.8}},{"id":"1863-01-19_reply-to-the-working-men-of-manchester-england","date":"1863-01-19","title":"Reply to the Working Men of Manchester, England","era":"wartime","aud":"General Public","wc":630,"fk":14.0,"sl":33.1,"wl":4.68,"vr":0.496,"fs":-1.6,"pr":{"we":3.2,"you":17.5,"they":7.9,"i":19.0}},{"id":"1863-02-02_reply-to-the-workingmen-of-london","date":"1863-02-02","title":"Reply to the Workingmen of London","era":"wartime","aud":"General Public","wc":179,"fk":null,"sl":25.6,"wl":5.07,"vr":0.644,"fs":-5.65,"pr":{"we":0.0,"you":16.8,"they":27.9,"i":11.2}},{"id":"1863-03-10_proclamation-of-amnesty-for-deserters","date":"1863-03-10","title":"Proclamation of Amnesty for Deserters","era":"wartime","aud":"General Public","wc":446,"fk":22.0,"sl":223.0,"wl":4.83,"vr":0.404,"fs":27.09,"pr":{"we":0.0,"you":0.0,"they":31.4,"i":6.7}},{"id":"1863-03-18_address-at-the-sanitary-commission-fair-washington-dc","date":"1863-03-18","title":"Address at the Sanitary Commission Fair, Washington DC","era":"wartime","aud":"General Public","wc":591,"fk":7.9,"sl":19.1,"wl":4.44,"vr":0.52,"fs":-8.58,"pr":{"we":16.9,"you":0.0,"they":6.8,"i":0.0}},{"id":"1863-03-30_proclamation-of-a-day-of-national-prayer-and-humiliation","date":"1863-03-30","title":"Proclamation of a Day of National Prayer and Humiliation","era":"wartime","aud":"General Public","wc":549,"fk":20.0,"sl":45.8,"wl":4.62,"vr":0.47,"fs":1.83,"pr":{"we":41.9,"you":0.0,"they":9.1,"i":5.5}},{"id":"1863-07-07_response-to-a-serenade-after-gettysburg","date":"1863-07-07","title":"Response to a Serenade (After Gettysburg)","era":"wartime","aud":"General Public","wc":1187,"fk":16.8,"sl":42.4,"wl":4.54,"vr":0.486,"fs":-10.0,"pr":{"we":5.7,"you":0.0,"they":6.6,"i":5.7}},{"id":"1863-07-15_proclamation-of-thanksgiving-for-gettysburg-and-vicksburg","date":"1863-07-15","title":"Proclamation of Thanksgiving for Gettysburg and Vicksburg","era":"wartime","aud":"General Public","wc":5071,"fk":14.5,"sl":31.1,"wl":4.8,"vr":0.524,"fs":-14.0,"pr":{"we":1.0,"you":0.0,"they":22.8,"i":0.0}},{"id":"1863-07-30_order-of-retaliation","date":"1863-07-30","title":"Order of Retaliation","era":"wartime","aud":"General Public","wc":225,"fk":13.8,"sl":37.2,"wl":4.45,"vr":0.489,"fs":-4.46,"pr":{"we":4.4,"you":0.0,"they":0.0,"i":0.0}},{"id":"1863-08-26_public-letter-to-james-conkling","date":"1863-08-26","title":"Public Letter to James Conkling","era":"wartime","aud":"General Public","wc":3393,"fk":7.5,"sl":18.0,"wl":4.22,"vr":0.432,"fs":-3.0,"pr":{"we":10.1,"you":22.9,"they":7.3,"i":19.2}},{"id":"1863-09-07_address-at-the-dedication-of-the-soldiers-home-inaugural-add","date":"1863-09-07","title":"Address at the Dedication of the Soldiers' Home (Inaugural Address Fragment)","era":"wartime","aud":"General Public","wc":4158,"fk":14.5,"sl":28.1,"wl":4.71,"vr":0.52,"fs":2.0,"pr":{"we":1.0,"you":0.0,"they":30.1,"i":0.0}},{"id":"1863-10-03_proclamation-of-thanksgiving-national-holiday","date":"1863-10-03","title":"Proclamation of Thanksgiving (National Holiday)","era":"wartime","aud":"General Public","wc":393,"fk":21.3,"sl":49.1,"wl":4.68,"vr":0.536,"fs":5.13,"pr":{"we":5.1,"you":0.0,"they":10.2,"i":7.6}},{"id":"1863-11-19_gettysburg-address","date":"1863-11-19","title":"Gettysburg Address","era":"wartime","aud":"General Public","wc":272,"fk":10.9,"sl":27.2,"wl":4.22,"vr":0.507,"fs":-3.6,"pr":{"we":55.1,"you":0.0,"they":14.7,"i":0.0}},{"id":"1863-12-08_proclamation-of-amnesty-and-reconstruction-10-plan","date":"1863-12-08","title":"Proclamation of Amnesty and Reconstruction (10% Plan)","era":"wartime","aud":"General Public","wc":1149,"fk":22.0,"sl":104.4,"wl":4.93,"vr":0.398,"fs":18.0,"pr":{"we":0.0,"you":0.0,"they":8.3,"i":7.2}},{"id":"1863-12-08_third-annual-message","date":"1863-12-08","title":"Third Annual Message","era":"wartime","aud":"Congress","wc":6221,"fk":14.2,"sl":30.8,"wl":5.03,"vr":0.498,"fs":-1.0,"pr":{"we":6.1,"you":1.0,"they":11.2,"i":4.1}},{"id":"1864-02-01_proclamation-calling-500000-volunteers","date":"1864-02-01","title":"Proclamation Calling 500,000 Volunteers","era":"wartime","aud":"General Public","wc":419,"fk":15.7,"sl":34.8,"wl":4.94,"vr":0.415,"fs":21.69,"pr":{"we":2.4,"you":0.0,"they":0.0,"i":11.9}},{"id":"1864-04-04_address-on-reconstruction-to-albert-g-hodges","date":"1864-04-04","title":"Address on Reconstruction to Albert G. Hodges","era":"wartime","aud":"General Public","wc":1073,"fk":9.2,"sl":19.8,"wl":4.58,"vr":0.492,"fs":-5.0,"pr":{"we":8.8,"you":4.9,"they":3.9,"i":34.1}},{"id":"1864-04-18_address-at-the-sanitary-commission-fair-baltimore","date":"1864-04-18","title":"Address at the Sanitary Commission Fair, Baltimore","era":"wartime","aud":"General Public","wc":591,"fk":7.9,"sl":19.1,"wl":4.44,"vr":0.52,"fs":-8.58,"pr":{"we":16.9,"you":0.0,"they":6.8,"i":0.0}},{"id":"1864-06-16_address-at-the-great-central-sanitary-fair-philadelphia","date":"1864-06-16","title":"Address at the Great Central Sanitary Fair, Philadelphia","era":"wartime","aud":"Military/Soldiers","wc":469,"fk":7.5,"sl":18.7,"wl":4.23,"vr":0.49,"fs":-4.26,"pr":{"we":19.2,"you":6.4,"they":6.4,"i":21.3}},{"id":"1864-07-08_message-to-congress-on-reconstruction-wade-davis-bill-veto","date":"1864-07-08","title":"Message to Congress on Reconstruction (Wade-Davis Bill Veto)","era":"wartime","aud":"Congress","wc":3249,"fk":17.6,"sl":45.7,"wl":4.68,"vr":0.524,"fs":4.0,"pr":{"we":1.0,"you":0.0,"they":13.8,"i":6.9}},{"id":"1864-08-18_address-to-the-164th-ohio-regiment","date":"1864-08-18","title":"Address to the 164th Ohio Regiment","era":"wartime","aud":"Military/Soldiers","wc":388,"fk":7.8,"sl":19.4,"wl":4.29,"vr":0.505,"fs":-12.95,"pr":{"we":30.9,"you":36.1,"they":5.2,"i":15.5}},{"id":"1864-08-22_address-to-the-166th-ohio-regiment","date":"1864-08-22","title":"Address to the 166th Ohio Regiment","era":"wartime","aud":"Military/Soldiers","wc":238,"fk":9.5,"sl":23.8,"wl":4.26,"vr":0.547,"fs":-4.29,"pr":{"we":33.6,"you":42.0,"they":4.2,"i":29.4}},{"id":"1864-08-23_memorandum-concerning-his-probable-failure-of-re-election-bl","date":"1864-08-23","title":"Memorandum Concerning His Probable Failure of Re-Election (Blind Memorandum)","era":"wartime","aud":"General Public","wc":399,"fk":9.4,"sl":19.0,"wl":4.57,"vr":0.539,"fs":-5.01,"pr":{"we":35.1,"you":0.0,"they":30.1,"i":0.0}},{"id":"1864-08-31_address-to-the-148th-ohio-regiment","date":"1864-08-31","title":"Address to the 148th Ohio Regiment","era":"wartime","aud":"Military/Soldiers","wc":345,"fk":13.5,"sl":26.5,"wl":4.78,"vr":0.461,"fs":-17.75,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":2.9}},{"id":"1864-09-03_address-to-the-ohio-delegation-on-peace-negotiations","date":"1864-09-03","title":"Address to the Ohio Delegation (On Peace Negotiations)","era":"wartime","aud":"General Public","wc":85,"fk":null,"sl":28.3,"wl":5.0,"vr":0.651,"fs":0.0,"pr":{"we":0.0,"you":0.0,"they":11.8,"i":0.0}},{"id":"1864-11-10_response-to-a-serenade-after-re-election","date":"1864-11-10","title":"Response to a Serenade (After Re-Election)","era":"wartime","aud":"General Public","wc":1200,"fk":17.0,"sl":42.9,"wl":4.53,"vr":0.496,"fs":-10.0,"pr":{"we":5.7,"you":0.0,"they":5.7,"i":5.7}},{"id":"1864-12-06_fourth-annual-message","date":"1864-12-06","title":"Fourth Annual Message","era":"wartime","aud":"Congress","wc":5997,"fk":12.9,"sl":32.8,"wl":5.01,"vr":0.518,"fs":-12.0,"pr":{"we":14.4,"you":1.0,"they":3.1,"i":2.1}},{"id":"1864-12-26_address-on-the-surrender-of-savannah-december-1864","date":"1864-12-26","title":"Address on the Surrender of Savannah (December 1864)","era":"wartime","aud":"General Public","wc":53,"fk":null,"sl":26.5,"wl":4.96,"vr":0.784,"fs":0.0,"pr":{"we":0.0,"you":0.0,"they":0.0,"i":0.0}},{"id":"1865-02-01_message-to-congress-on-the-thirteenth-amendment","date":"1865-02-01","title":"Message to Congress on the Thirteenth Amendment","era":"wartime","aud":"Congress","wc":370,"fk":9.1,"sl":20.4,"wl":4.6,"vr":0.511,"fs":5.46,"pr":{"we":8.1,"you":2.7,"they":0.0,"i":0.0}},{"id":"1865-03-04_second-inaugural-address","date":"1865-03-04","title":"Second Inaugural Address","era":"wartime","aud":"General Public","wc":705,"fk":11.3,"sl":28.2,"wl":4.46,"vr":0.52,"fs":-10.04,"pr":{"we":14.2,"you":0.0,"they":2.8,"i":1.4}},{"id":"1865-03-17_response-to-a-serenade-after-the-second-inaugural","date":"1865-03-17","title":"Response to a Serenade after the Second Inaugural","era":"wartime","aud":"General Public","wc":1187,"fk":16.8,"sl":42.4,"wl":4.54,"vr":0.486,"fs":-10.0,"pr":{"we":5.7,"you":0.0,"they":6.6,"i":5.7}},{"id":"1865-03-17_speech-to-the-140th-indiana-regiment","date":"1865-03-17","title":"Speech to the 140th Indiana Regiment","era":"wartime","aud":"Military/Soldiers","wc":553,"fk":7.2,"sl":20.5,"wl":3.82,"vr":0.41,"fs":-5.48,"pr":{"we":5.4,"you":1.8,"they":43.4,"i":45.2}},{"id":"1865-04-02_response-to-a-serenade-on-the-fall-of-richmond","date":"1865-04-02","title":"Response to a Serenade on the Fall of Richmond","era":"wartime","aud":"General Public","wc":1187,"fk":16.8,"sl":42.4,"wl":4.54,"vr":0.486,"fs":-10.0,"pr":{"we":5.7,"you":0.0,"they":6.6,"i":5.7}},{"id":"1865-04-11_last-public-address","date":"1865-04-11","title":"Last Public Address","era":"post-war","aud":"General Public","wc":1317,"fk":17.3,"sl":39.8,"wl":4.89,"vr":0.41,"fs":4.0,"pr":{"we":3.1,"you":4.1,"they":4.1,"i":0.0}}];
+
+const AUD_COLORS = {
+  'General Public':'#60a5fa',
+  'Congress':'#818cf8',
+  'Political Rally':'#facc15',
+  'Military/Soldiers':'#f87171',
+  'Civic Organization':'#34d399'
+};
+const AUDIENCES = ['General Public','Congress','Political Rally','Military/Soldiers','Civic Organization'];
+const PRONOUNS = ['we','you','they','i'];
+const PR_COLORS = {'we':'#60a5fa','you':'#34d399','they':'#fb923c','i':'#f87171'};
+
+function audAvg(aud, field){
+  const d = aud==='all' ? DATA : DATA.filter(s=>s.aud===aud);
+  return d.reduce((s,x)=>{
+    const v = field.includes('.') ? x[field.split('.')[0]][field.split('.')[1]] : x[field];
+    return s+(v||0);
+  },0)/d.length;
+}
+function audAvgPronoun(aud, pr){
+  const d = aud==='all' ? DATA : DATA.filter(s=>s.aud===aud);
+  return d.reduce((s,x)=>s+(x.pr[pr]||0),0)/d.length;
+}
+
+// ── Tab Setup ──
+let scatterBuilt=false;
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+    if(t.dataset.tab==='scatter' && !scatterBuilt){ buildScatter(); scatterBuilt=true; }
+    if(t.dataset.tab==='browse') buildBrowse('all');
+  });
+});
+
+// ── Horizontal Bar Chart helper ──
+function drawHBar(canvasId, labels, values, colors, maxVal){
+  const c=document.getElementById(canvasId);
+  const W=c.clientWidth; c.width=W; c.height=parseInt(c.getAttribute('height'));
+  const H=c.height; const ctx=c.getContext('2d');
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  const pad={l:130,r:60,t:15,b:15};
+  const plotW=W-pad.l-pad.r; const rowH=(H-pad.t-pad.b)/labels.length;
+
+  labels.forEach((lbl,i)=>{
+    const v=values[i]; const y=pad.t+i*rowH;
+    const bw=(v/maxVal)*plotW; const bh=rowH*0.55; const by=y+(rowH-bh)/2;
+    ctx.fillStyle=colors[i]+'cc'; ctx.fillRect(pad.l,by,bw,bh);
+    ctx.fillStyle='#8b8fa8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    ctx.fillText(lbl,pad.l-6,by+bh/2+4);
+    ctx.fillStyle='#e8e9f0'; ctx.font='10px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(v.toFixed(1),pad.l+bw+5,by+bh/2+3);
+  });
+}
+
+function buildCompare(){
+  const slVals=AUDIENCES.map(a=>audAvg(a,'sl'));
+  drawHBar('sl-chart',AUDIENCES,slVals,AUDIENCES.map(a=>AUD_COLORS[a]),Math.max(...slVals)*1.15);
+
+  const fkVals=AUDIENCES.map(a=>{
+    const d=DATA.filter(s=>s.aud===a && s.fk!==null);
+    return d.reduce((s,x)=>s+x.fk,0)/d.length;
+  });
+  drawHBar('fk-aud-chart',AUDIENCES,fkVals,AUDIENCES.map(a=>AUD_COLORS[a]),Math.max(...fkVals)*1.15);
+
+  const vrVals=AUDIENCES.map(a=>audAvg(a,'vr')*100);
+  drawHBar('vocab-chart',AUDIENCES,vrVals,AUDIENCES.map(a=>AUD_COLORS[a]),Math.max(...vrVals)*1.15);
+}
+
+// ── Scatter ──
+function buildScatter(){
+  const c=document.getElementById('scatter-chart');
+  const W=c.clientWidth; c.width=W; c.height=380;
+  const ctx=c.getContext('2d'); const H=380;
+  const pad={l:45,r:20,t:30,b:50};
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+
+  const valid=DATA.filter(s=>s.fk!==null && s.sl>0);
+  const maxSL=Math.max(...valid.map(s=>s.sl)); const minFK=8; const maxFK=20;
+
+  // grid
+  [10,15,20,25,30,35,40,45].forEach(v=>{
+    const x=pad.l+(v/maxSL)*(W-pad.l-pad.r);
+    ctx.strokeStyle='#2e3148'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,H-pad.b); ctx.stroke();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(v,x,H-pad.b+12);
+  });
+  [10,12,14,16,18,20].forEach(v=>{
+    const y=pad.t+(maxFK-v)/(maxFK-minFK)*(H-pad.t-pad.b);
+    ctx.strokeStyle='#2e3148'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+    ctx.fillText('Gr '+v,pad.l-4,y+3);
+  });
+
+  ctx.fillStyle='#8b8fa8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Avg Sentence Length (words)',W/2,H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('FK Grade Level',0,0); ctx.restore();
+
+  valid.forEach(s=>{
+    const x=pad.l+(s.sl/maxSL)*(W-pad.l-pad.r);
+    const y=pad.t+(maxFK-s.fk)/(maxFK-minFK)*(H-pad.t-pad.b);
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle=AUD_COLORS[s.aud]+'bb'; ctx.fill();
+  });
+
+  // legend
+  let lx=pad.l; const ly=H-pad.b+28;
+  AUDIENCES.forEach(a=>{
+    ctx.fillStyle=AUD_COLORS[a]; ctx.beginPath(); ctx.arc(lx+4,ly-4,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(a,lx+10,ly);
+    lx+=ctx.measureText(a).width+24;
+    if(lx>W-100){lx=pad.l;}
+  });
+}
+
+// ── Pronouns ──
+function buildPronouns(){
+  const c=document.getElementById('pronoun-chart');
+  const W=c.clientWidth; c.width=W; c.height=240;
+  const ctx=c.getContext('2d'); const H=240;
+  const pad={l:130,r:20,t:30,b:30};
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+
+  const plotW=W-pad.l-pad.r; const rowH=(H-pad.t-pad.b)/AUDIENCES.length;
+  const maxPR=Math.max(...AUDIENCES.flatMap(a=>PRONOUNS.map(p=>audAvgPronoun(a,p))));
+  const segW=(plotW-5*(PRONOUNS.length-1))/PRONOUNS.length;
+  // Not right - let's do grouped horizontal bars
+  // Each audience = one row; within row, 4 mini bars for pronouns
+  AUDIENCES.forEach((aud,ai)=>{
+    const y=pad.t+ai*rowH;
+    ctx.fillStyle='#8b8fa8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    ctx.fillText(aud,pad.l-6,y+rowH/2+4);
+    PRONOUNS.forEach((pr,pi)=>{
+      const v=audAvgPronoun(aud,pr);
+      const bw=(v/maxPR)*(plotW/PRONOUNS.length*0.8);
+      const bh=rowH*0.18; const by=y+pi*(bh+2)+rowH*0.1;
+      ctx.fillStyle=PR_COLORS[pr]+'cc'; ctx.fillRect(pad.l,by,bw,bh);
+    });
+  });
+
+  // legend
+  let lx=pad.l; const ly=H-8;
+  PRONOUNS.forEach(p=>{
+    ctx.fillStyle=PR_COLORS[p]; ctx.fillRect(lx,ly-7,8,7);
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(p,lx+10,ly);
+    lx+=30;
+  });
+  ctx.fillStyle='#8b8fa8'; ctx.font='8px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('(per 1,000 words)',pad.l+130,ly);
+
+  // Cards
+  const cards=document.getElementById('pronoun-cards');
+  cards.innerHTML='';
+  AUDIENCES.forEach(aud=>{
+    const maxV=Math.max(...PRONOUNS.map(p=>audAvgPronoun(aud,p)));
+    const card=document.createElement('div'); card.className='p-card';
+    card.innerHTML=`<h4>${aud}</h4>`+
+      PRONOUNS.map(p=>{
+        const v=audAvgPronoun(aud,p);
+        return `<div class="p-bar-row">
+          <div class="p-bar-lbl">${p}</div>
+          <div class="p-bar-track"><div class="p-bar-fill" style="width:${(v/maxV*100).toFixed(0)}%;background:${PR_COLORS[p]}"></div></div>
+          <div class="p-bar-val">${v.toFixed(1)}</div>
+        </div>`;
+      }).join('');
+    cards.appendChild(card);
+  });
+}
+
+// ── Browse ──
+let activeAud='all';
+function buildBrowse(aud){
+  activeAud=aud;
+  const data=aud==='all'?DATA:DATA.filter(s=>s.aud===aud);
+  const list=document.getElementById('browse-list');
+  list.innerHTML='';
+  data.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{
+    const card=document.createElement('div'); card.className='speech-card';
+    card.innerHTML=`
+      <div class="sc-title">${s.title}</div>
+      <div class="sc-meta">${s.date} &middot; <span style="color:${AUD_COLORS[s.aud]}">${s.aud}</span></div>
+      <div class="mini-stat-row">
+        <div class="mini-stat"><strong>${s.sl}</strong> words/sent</div>
+        <div class="mini-stat">FK <strong>${s.fk!==null?s.fk.toFixed(1):'N/A'}</strong></div>
+        <div class="mini-stat">we <strong>${s.pr.we}</strong></div>
+        <div class="mini-stat">I <strong>${s.pr.i}</strong></div>
+        <div class="mini-stat">${s.wc.toLocaleString()} words</div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+document.querySelectorAll('.aud-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.aud-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    buildBrowse(btn.dataset.aud);
+  });
+});
+
+// ── Init ──
+function initAll(){
+  buildCompare();
+  buildPronouns();
+}
+window.addEventListener('resize',()=>{
+  initAll();
+  if(scatterBuilt) buildScatter();
+});
+initAll();
+buildBrowse('all');
+</script>
+</body>
+</html>

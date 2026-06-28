@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lincoln Speeches: Metadata Timeline</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3148;--text:#e8e9f0;--muted:#8b8fa8;--accent:#c9a84c;--al:#f0c96a;--pre:#4a9eff;--war:#ff6b4a;--post:#4aff9e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Georgia,serif;min-height:100vh}
+.hero{background:linear-gradient(160deg,#12151f,#1a1d27 60%,#0f1117);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;text-align:center}
+.eyebrow{font-family:sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);margin-bottom:.8rem}
+h1{font-size:clamp(1.6rem,3.5vw,2.6rem);color:var(--al);margin-bottom:.5rem}
+.sub{font-family:sans-serif;font-size:.95rem;color:var(--muted);max-width:600px;margin:0 auto 1.5rem;line-height:1.6}
+.stats{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.stat-num{display:block;font-size:1.7rem;font-weight:bold;color:var(--al);font-family:sans-serif}
+.stat-lbl{font-family:sans-serif;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.era-bar{display:flex;max-width:440px;margin:0 auto;border-radius:4px;overflow:hidden;height:5px}
+.era-leg{font-family:sans-serif;font-size:.65rem;color:var(--muted);margin-top:.4rem;letter-spacing:.05em}
+.layout{display:grid;grid-template-columns:200px 1fr;gap:0;max-width:1200px;margin:0 auto}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.2rem;min-height:60vh}
+.sidebar h3{font-family:sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin-bottom:.8rem}
+.filter-group{margin-bottom:1.4rem}
+.filter-group label{display:flex;align-items:center;gap:.5rem;font-family:sans-serif;font-size:.78rem;color:var(--muted);cursor:pointer;padding:.2rem 0}
+.filter-group label:hover{color:var(--text)}
+.filter-group input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px}
+.main{padding:1.5rem}
+.section-label{font-family:sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:1.2rem;position:relative}
+canvas{display:block;width:100%}
+.chart-note{font-family:sans-serif;font-size:.72rem;color:var(--muted);margin-top:.5rem;line-height:1.5}
+.detail-panel{display:none;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem}
+.detail-panel.active{display:block}
+.detail-title{color:var(--al);font-size:1.05rem;margin-bottom:.3rem}
+.detail-meta{font-family:sans-serif;font-size:.78rem;color:var(--muted);margin-bottom:.8rem}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
+.detail-stat{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:.6rem}
+.detail-stat-val{font-size:1.1rem;font-weight:bold;color:var(--al);font-family:sans-serif}
+.detail-stat-lbl{font-family:sans-serif;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.8rem}
+.tag{font-family:sans-serif;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.era-badge{font-size:.62rem;padding:2px 8px;border-radius:10px;font-family:sans-serif;display:inline-block}
+.era-pre{background:rgba(74,158,255,.15);border:1px solid rgba(74,158,255,.3);color:var(--pre)}
+.era-war{background:rgba(255,107,74,.15);border:1px solid rgba(255,107,74,.3);color:var(--war)}
+.era-post{background:rgba(74,255,158,.15);border:1px solid rgba(74,255,158,.3);color:var(--post)}
+.about{max-width:1200px;margin:0 auto;padding:1.5rem 1.5rem 3rem}
+.about h2{font-size:1rem;color:var(--al);margin-bottom:1rem;font-family:sans-serif}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.about-grid{grid-template-columns:1fr}}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem}
+.about-card h3{font-family:sans-serif;font-size:.82rem;color:var(--al);margin-bottom:.5rem}
+.about-card p{font-family:sans-serif;font-size:.78rem;color:var(--muted);line-height:1.6}
+.about-card p+p{margin-top:.4rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Computational Rhetoric &mdash; Lincoln Corpus</div>
+  <h1>Speeches in Context: A Metadata Timeline</h1>
+  <p class="sub">125 speeches across 33 years — plotted against historical turning points to reveal how Lincoln's voice, focus, and complexity shifted from prairie lawyer to wartime president.</p>
+  <div class="stats">
+    <div><span class="stat-num">125</span><span class="stat-lbl">Speeches</span></div>
+    <div><span class="stat-num">1832–1865</span><span class="stat-lbl">Career Span</span></div>
+    <div><span class="stat-num">~750k</span><span class="stat-lbl">Words Analyzed</span></div>
+    <div><span class="stat-num">10</span><span class="stat-lbl">Major Themes</span></div>
+  </div>
+  <div class="era-bar">
+    <div style="width:43.2%;background:var(--pre);height:100%"></div>
+    <div style="width:56%;background:var(--war);height:100%"></div>
+    <div style="width:.8%;background:var(--post);height:100%"></div>
+  </div>
+  <div class="era-leg">
+    <span style="color:var(--pre)">&#9644; Pre-War (54)</span> &nbsp;
+    <span style="color:var(--war)">&#9644; Wartime (70)</span> &nbsp;
+    <span style="color:var(--post)">&#9644; Post-War (1)</span>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>Filter</h3>
+    <div class="filter-group">
+      <div style="font-family:sans-serif;font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Era</div>
+      <label><input type="checkbox" class="era-filter" value="pre-war" checked> Pre-War</label>
+      <label><input type="checkbox" class="era-filter" value="wartime" checked> Wartime</label>
+      <label><input type="checkbox" class="era-filter" value="post-war" checked> Post-War</label>
+    </div>
+    <div class="filter-group">
+      <div style="font-family:sans-serif;font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Theme</div>
+      <label><input type="checkbox" class="theme-filter" value="all" checked> All themes</label>
+      <label><input type="checkbox" class="theme-filter" value="slavery"> Slavery</label>
+      <label><input type="checkbox" class="theme-filter" value="emancipation"> Emancipation</label>
+      <label><input type="checkbox" class="theme-filter" value="constitutional-law"> Constitutional Law</label>
+      <label><input type="checkbox" class="theme-filter" value="national-unity"> National Unity</label>
+      <label><input type="checkbox" class="theme-filter" value="war-policy"> War Policy</label>
+      <label><input type="checkbox" class="theme-filter" value="religion-morality"> Religion/Morality</label>
+      <label><input type="checkbox" class="theme-filter" value="partisan-politics"> Partisan Politics</label>
+      <label><input type="checkbox" class="theme-filter" value="economy"> Economy</label>
+      <label><input type="checkbox" class="theme-filter" value="territorial-expansion"> Territorial Expansion</label>
+    </div>
+    <div id="count-display" style="font-family:sans-serif;font-size:.75rem;color:var(--muted);padding-top:.5rem;border-top:1px solid var(--border)">125 speeches shown</div>
+  </aside>
+
+  <div class="main">
+    <div id="detail" class="detail-panel"></div>
+
+    <div class="section-label">Reading Level Over Time (Flesch-Kincaid Grade)</div>
+    <div class="chart-wrap">
+      <canvas id="fk-chart" height="220"></canvas>
+      <p class="chart-note">Each dot is one speech. Size reflects word count. Click any dot to see details. Gold line = 6-speech rolling average. Dashed vertical lines mark historical turning points.</p>
+    </div>
+
+    <div class="section-label">Word Count Per Speech</div>
+    <div class="chart-wrap">
+      <canvas id="wc-chart" height="140"></canvas>
+      <p class="chart-note">Bar height = number of words. Wartime speeches are often shorter — proclamations, orders, brief addresses — while pre-war debates run long.</p>
+    </div>
+
+    <div class="section-label">Theme Distribution Over Time</div>
+    <div class="chart-wrap">
+      <canvas id="theme-chart" height="120"></canvas>
+      <p class="chart-note">Each vertical strip is one speech, colored by its dominant theme. Watch slavery (teal) give way to emancipation (orange) and national unity (blue) as the war progresses.</p>
+    </div>
+  </div>
+</div>
+
+<div class="about">
+  <div class="section-label" style="margin-bottom:1rem">About This Analysis</div>
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>The Corpus</h3>
+      <p>125 speeches and addresses spanning Lincoln's public career from his first recorded address in 1832 to his last public speech on April 11, 1865 — three days before his assassination. The corpus includes debates, inaugural addresses, military orders, congressional messages, and occasional remarks.</p>
+    </div>
+    <div class="about-card">
+      <h3>Reading Level: A Caution</h3>
+      <p>Flesch-Kincaid grade scores here range from 10 to 16 — upper high school to graduate level by modern standards. This reflects sentence length and syllable count, not audience sophistication.</p>
+      <p>Lincoln's audiences were trained for long-form oratory; the Lincoln-Douglas debates ran seven hours. High FK scores reveal the structure of 19th-century public address, not an elite audience.</p>
+    </div>
+    <div class="about-card">
+      <h3>What the Data Shows</h3>
+      <p>Reading level rises through the pre-war years — Lincoln's arguments grow more elaborate — then drops sharply after Fort Sumter. Wartime rhetoric is compressed, declarative, and direct. The Second Inaugural reverses this trend: dense, philosophical, only 703 words.</p>
+    </div>
+    <div class="about-card">
+      <h3>What the Data Cannot Show</h3>
+      <p>Metadata captures structure, not meaning. The Gettysburg Address scores modestly on complexity but is among the most carefully constructed speeches in American history. Numbers describe what the algorithm can count; close reading is still required to explain why those numbers are significant.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SPEECHES = [{"id":"1832-03-09_communication-to-the-people-of-sangamon-county-first-politic","date":"1832-03-09","title":"Communication to the People of Sangamon County (First Political Announcement)","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":17095,"fk":14.7,"notable":false},{"id":"1837-01-11_address-to-the-people-of-illinois-on-the-state-bank","date":"1837-01-11","title":"Address to the People of Illinois on the State Bank","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15602,"fk":14.6,"notable":false},{"id":"1837-03-03_protest-against-slavery-in-the-illinois-legislature","date":"1837-03-03","title":"Protest against Slavery in the Illinois Legislature","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":16873,"fk":14.7,"notable":false},{"id":"1838-01-27_the-perpetuation-of-our-political-institutions-lyceum-addres","date":"1838-01-27","title":"The Perpetuation of Our Political Institutions (Lyceum Address)","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","constitutional-law","territorial-expansion"],"wordCount":3552,"fk":12.1,"notable":true},{"id":"1839-12-26_address-on-the-sub-treasury-first-political-speech-against-d","date":"1839-12-26","title":"Address on the Sub-Treasury (First Political Speech against Democrats)","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":11082,"fk":15.0,"notable":false},{"id":"1839-12-29_address-on-the-sub-treasury-second-political-speech","date":"1839-12-29","title":"Address on the Sub-Treasury (Second Political Speech)","era":"pre-war","audience":"General Public","themes":["national-unity","constitutional-law","partisan-politics"],"wordCount":764,"fk":16.7,"notable":false},{"id":"1841-07-01_eulogy-on-president-william-henry-harrison","date":"1841-07-01","title":"Eulogy on President William Henry Harrison","era":"pre-war","audience":"Civic Organization","themes":["national-unity"],"wordCount":1520,"fk":11.8,"notable":false},{"id":"1842-02-22_address-to-the-washington-temperance-society","date":"1842-02-22","title":"Address to the Washington Temperance Society","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality"],"wordCount":3894,"fk":11.1,"notable":false},{"id":"1847-12-22_spot-resolutions-speech-on-the-mexican-war","date":"1847-12-22","title":"Spot Resolutions (Speech on the Mexican War)","era":"pre-war","audience":"General Public","themes":["national-unity","constitutional-law","partisan-politics","territorial-expansion"],"wordCount":603,"fk":16.9,"notable":false},{"id":"1848-01-12_speech-on-the-mexican-american-war","date":"1848-01-12","title":"Speech on the Mexican-American War","era":"pre-war","audience":"General Public","themes":["slavery","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":4893,"fk":13.2,"notable":false},{"id":"1848-06-20_speech-on-internal-improvements","date":"1848-06-20","title":"Speech on Internal Improvements","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":14533,"fk":14.6,"notable":false},{"id":"1848-07-27_speech-in-the-us-house-on-the-presidential-question","date":"1848-07-27","title":"Speech in the U.S. House on the Presidential Question","era":"pre-war","audience":"Congress","themes":["national-unity","economy","constitutional-law","partisan-politics"],"wordCount":490,"fk":11.4,"notable":false},{"id":"1848-09-12_campaign-speech-for-zachary-taylor-at-worcester-massachusett","date":"1848-09-12","title":"Campaign Speech for Zachary Taylor at Worcester, Massachusetts","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":1546,"fk":9.6,"notable":false},{"id":"1848-09-15_campaign-speech-for-zachary-taylor-at-boston","date":"1848-09-15","title":"Campaign Speech for Zachary Taylor at Boston","era":"pre-war","audience":"Political Rally","themes":["national-unity"],"wordCount":65,"fk":null,"notable":false},{"id":"1850-07-25_eulogy-on-zachary-taylor","date":"1850-07-25","title":"Eulogy on Zachary Taylor","era":"pre-war","audience":"Civic Organization","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":5429,"fk":10.5,"notable":false},{"id":"1852-07-06_eulogy-on-henry-clay","date":"1852-07-06","title":"Eulogy on Henry Clay","era":"pre-war","audience":"Civic Organization","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":10874,"fk":10.5,"notable":false},{"id":"1854-10-04_speech-on-the-kansas-nebraska-act-at-springfield","date":"1854-10-04","title":"Speech on the Kansas-Nebraska Act at Springfield","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15646,"fk":14.7,"notable":false},{"id":"1854-10-16_at-peoria-illinois","date":"1854-10-16","title":"At Peoria, Illinois","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":33424,"fk":10.1,"notable":true},{"id":"1856-05-29_speech-at-bloomington-illinois-the-lost-speech","date":"1856-05-29","title":"Speech at Bloomington, Illinois (The Lost Speech)","era":"pre-war","audience":"Political Rally","themes":["general"],"wordCount":67,"fk":null,"notable":false},{"id":"1856-07-23_speech-at-galena-illinois","date":"1856-07-23","title":"Speech at Galena, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","territorial-expansion"],"wordCount":661,"fk":7.4,"notable":false},{"id":"1856-08-27_speech-at-kalamazoo-michigan","date":"1856-08-27","title":"Speech at Kalamazoo, Michigan","era":"pre-war","audience":"Political Rally","themes":["slavery","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":4893,"fk":13.2,"notable":false},{"id":"1858-06-16_a-house-divided-speech","date":"1858-06-16","title":"A House Divided Speech","era":"pre-war","audience":"Congress","themes":["slavery","emancipation","national-unity","economy","constitutional-law","partisan-politics","territorial-expansion"],"wordCount":3214,"fk":11.3,"notable":true},{"id":"1858-07-10_speech-at-chicago-reply-to-douglas","date":"1858-07-10","title":"Speech at Chicago (Reply to Douglas)","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":8282,"fk":10.7,"notable":false},{"id":"1858-07-17_speech-at-springfield-reply-to-douglas","date":"1858-07-17","title":"Speech at Springfield (Reply to Douglas)","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":7935,"fk":10.4,"notable":false},{"id":"1858-08-17_speech-at-lewistown-illinois","date":"1858-08-17","title":"Speech at Lewistown, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":8282,"fk":10.7,"notable":false},{"id":"1858-08-21_lincoln-douglas-debate-no-1-ottawa-illinois","date":"1858-08-21","title":"Lincoln-Douglas Debate No. 1 \u2014 Ottawa, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-08-27_lincoln-douglas-debate-no-2-freeport-illinois","date":"1858-08-27","title":"Lincoln-Douglas Debate No. 2 \u2014 Freeport, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-08-31_speech-at-carlinville-illinois","date":"1858-08-31","title":"Speech at Carlinville, Illinois","era":"pre-war","audience":"Political Rally","themes":["partisan-politics"],"wordCount":29,"fk":null,"notable":false},{"id":"1858-09-11_speech-at-edwardsville-illinois","date":"1858-09-11","title":"Speech at Edwardsville, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":1003,"fk":13.9,"notable":false},{"id":"1858-09-15_lincoln-douglas-debate-no-3-jonesboro-illinois","date":"1858-09-15","title":"Lincoln-Douglas Debate No. 3 \u2014 Jonesboro, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-09-18_lincoln-douglas-debate-no-4-charleston-illinois","date":"1858-09-18","title":"Lincoln-Douglas Debate No. 4 \u2014 Charleston, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-10-07_lincoln-douglas-debate-no-5-galesburg-illinois","date":"1858-10-07","title":"Lincoln-Douglas Debate No. 5 \u2014 Galesburg, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-10-11_speech-at-monmouth-illinois","date":"1858-10-11","title":"Speech at Monmouth, Illinois","era":"pre-war","audience":"Political Rally","themes":["partisan-politics"],"wordCount":17,"fk":null,"notable":false},{"id":"1858-10-13_lincoln-douglas-debate-no-6-quincy-illinois","date":"1858-10-13","title":"Lincoln-Douglas Debate No. 6 \u2014 Quincy, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1858-10-15_lincoln-douglas-debate-no-7-alton-illinois","date":"1858-10-15","title":"Lincoln-Douglas Debate No. 7 \u2014 Alton, Illinois","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":15118,"fk":14.7,"notable":true},{"id":"1859-09-16_speech-at-columbus-ohio","date":"1859-09-16","title":"Speech at Columbus, Ohio","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":11924,"fk":13.9,"notable":false},{"id":"1859-09-17_speech-at-cincinnati-ohio","date":"1859-09-17","title":"Speech at Cincinnati, Ohio","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":11183,"fk":11.8,"notable":false},{"id":"1859-09-17_speech-at-dayton-ohio","date":"1859-09-17","title":"Speech at Dayton, Ohio","era":"pre-war","audience":"Political Rally","themes":["partisan-politics"],"wordCount":18,"fk":null,"notable":false},{"id":"1859-09-17_speech-at-hamilton-ohio","date":"1859-09-17","title":"Speech at Hamilton, Ohio","era":"pre-war","audience":"Political Rally","themes":["general"],"wordCount":13,"fk":null,"notable":false},{"id":"1859-09-19_speech-at-indianapolis-indiana","date":"1859-09-19","title":"Speech at Indianapolis, Indiana","era":"pre-war","audience":"Political Rally","themes":["national-unity"],"wordCount":180,"fk":null,"notable":false},{"id":"1859-09-30_address-at-the-wisconsin-state-agricultural-society-milwauke","date":"1859-09-30","title":"Address at the Wisconsin State Agricultural Society (Milwaukee Speech)","era":"pre-war","audience":"General Public","themes":["partisan-politics"],"wordCount":245,"fk":22.0,"notable":false},{"id":"1859-09-30_speech-at-milwaukee-wisconsin","date":"1859-09-30","title":"Speech at Milwaukee, Wisconsin","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality"],"wordCount":3894,"fk":11.1,"notable":false},{"id":"1859-12-01_speech-at-elwood-kansas","date":"1859-12-01","title":"Speech at Elwood, Kansas","era":"pre-war","audience":"Political Rally","themes":["emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":3732,"fk":10.7,"notable":false},{"id":"1859-12-02_speech-at-atchison-kansas","date":"1859-12-02","title":"Speech at Atchison, Kansas","era":"pre-war","audience":"Political Rally","themes":["emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":3732,"fk":10.7,"notable":false},{"id":"1859-12-02_speech-at-troy-kansas","date":"1859-12-02","title":"Speech at Troy, Kansas","era":"pre-war","audience":"Political Rally","themes":["emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":3732,"fk":10.7,"notable":false},{"id":"1859-12-03_speech-at-leavenworth-kansas","date":"1859-12-03","title":"Speech at Leavenworth, Kansas","era":"pre-war","audience":"Political Rally","themes":["slavery","constitutional-law","partisan-politics"],"wordCount":176,"fk":null,"notable":false},{"id":"1860-02-27_address-at-cooper-union-evening-remarks","date":"1860-02-27","title":"Address at Cooper Union (Evening Remarks)","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","constitutional-law","territorial-expansion"],"wordCount":3556,"fk":12.0,"notable":true},{"id":"1860-02-27_cooper-union-address","date":"1860-02-27","title":"Cooper Union Address","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":6164,"fk":12.4,"notable":true},{"id":"1860-03-05_speech-at-hartford-connecticut","date":"1860-03-05","title":"Speech at Hartford, Connecticut","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":7939,"fk":9.8,"notable":false},{"id":"1860-03-06_speech-at-new-haven-connecticut","date":"1860-03-06","title":"Speech at New Haven, Connecticut","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":7939,"fk":9.8,"notable":false},{"id":"1860-03-08_speech-at-providence-rhode-island","date":"1860-03-08","title":"Speech at Providence, Rhode Island","era":"pre-war","audience":"Political Rally","themes":["religion-morality"],"wordCount":24,"fk":null,"notable":false},{"id":"1860-05-18_address-at-chicago-after-nomination-acceptance","date":"1860-05-18","title":"Address at Chicago after Nomination (Acceptance)","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":3046,"fk":13.5,"notable":false},{"id":"1860-05-23_reply-to-the-committee-notifying-lincoln-of-his-nomination","date":"1860-05-23","title":"Reply to the Committee Notifying Lincoln of his Nomination","era":"pre-war","audience":"General Public","themes":["slavery","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":3136,"fk":13.5,"notable":false},{"id":"1860-07-10_speech-at-chicago-after-nomination","date":"1860-07-10","title":"Speech at Chicago after Nomination","era":"pre-war","audience":"Political Rally","themes":["slavery","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":3046,"fk":13.5,"notable":false},{"id":"1861-01-31_reply-to-the-governor-and-legislature-of-illinois","date":"1861-01-31","title":"Reply to the Governor and Legislature of Illinois","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":9095,"fk":15.0,"notable":false},{"id":"1861-02-11_farewell-address","date":"1861-02-11","title":"Farewell Address","era":"wartime","audience":"General Public","themes":["religion-morality"],"wordCount":152,"fk":null,"notable":false},{"id":"1861-02-11_speech-at-indianapolis-indiana","date":"1861-02-11","title":"Speech at Indianapolis, Indiana","era":"wartime","audience":"Political Rally","themes":["war-policy","national-unity"],"wordCount":180,"fk":null,"notable":false},{"id":"1861-02-13_speech-at-columbus-ohio","date":"1861-02-13","title":"Speech at Columbus, Ohio","era":"wartime","audience":"Political Rally","themes":["national-unity","religion-morality","partisan-politics"],"wordCount":358,"fk":9.6,"notable":false},{"id":"1861-02-15_speech-at-cleveland-ohio","date":"1861-02-15","title":"Speech at Cleveland, Ohio","era":"wartime","audience":"Political Rally","themes":["slavery","war-policy","national-unity","constitutional-law","partisan-politics"],"wordCount":479,"fk":6.8,"notable":false},{"id":"1861-02-15_speech-at-pittsburgh-pennsylvania","date":"1861-02-15","title":"Speech at Pittsburgh, Pennsylvania","era":"wartime","audience":"Political Rally","themes":["war-policy","national-unity","economy","constitutional-law","partisan-politics"],"wordCount":1232,"fk":13.4,"notable":false},{"id":"1861-02-18_address-to-the-legislature-of-new-york-at-albany","date":"1861-02-18","title":"Address to the Legislature of New York at Albany","era":"wartime","audience":"General Public","themes":["national-unity","religion-morality","partisan-politics"],"wordCount":565,"fk":12.7,"notable":false},{"id":"1861-02-21_address-to-the-new-jersey-general-assembly-at-trenton","date":"1861-02-21","title":"Address to the New Jersey General Assembly at Trenton","era":"wartime","audience":"General Public","themes":["national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":1062,"fk":12.2,"notable":false},{"id":"1861-02-21_address-to-the-new-jersey-senate-at-trenton","date":"1861-02-21","title":"Address to the New Jersey Senate at Trenton","era":"wartime","audience":"Congress","themes":["war-policy","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":1089,"fk":12.4,"notable":false},{"id":"1861-02-22_address-at-independence-hall-philadelphia","date":"1861-02-22","title":"Address at Independence Hall, Philadelphia","era":"wartime","audience":"General Public","themes":["war-policy","national-unity","religion-morality"],"wordCount":628,"fk":10.3,"notable":false},{"id":"1861-02-22_address-to-the-legislature-of-pennsylvania-at-harrisburg","date":"1861-02-22","title":"Address to the Legislature of Pennsylvania at Harrisburg","era":"wartime","audience":"General Public","themes":["national-unity","partisan-politics"],"wordCount":773,"fk":13.3,"notable":false},{"id":"1861-03-04_first-inaugural-address","date":"1861-03-04","title":"First Inaugural Address","era":"wartime","audience":"General Public","themes":["slavery","war-policy","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":3636,"fk":12.9,"notable":true},{"id":"1861-04-15_proclamation-calling-the-militia-and-convening-congress","date":"1861-04-15","title":"Proclamation Calling the Militia and Convening Congress","era":"wartime","audience":"Congress","themes":["war-policy","emancipation","national-unity","constitutional-law"],"wordCount":442,"fk":15.1,"notable":false},{"id":"1861-04-19_proclamation-of-blockade-against-southern-states","date":"1861-04-19","title":"Proclamation of Blockade Against Southern States","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":9761,"fk":15.1,"notable":false},{"id":"1861-04-27_proclamation-of-blockade-against-virginia-and-north-carolina","date":"1861-04-27","title":"Proclamation of Blockade Against Virginia and North Carolina","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":7002,"fk":15.1,"notable":false},{"id":"1861-07-04_july-4th-message-to-congress","date":"1861-07-04","title":"July 4th Message to Congress","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":6286,"fk":14.0,"notable":false},{"id":"1861-07-08_message-to-congress-requesting-suspension-of-habeas-corpus","date":"1861-07-08","title":"Message to Congress Requesting Suspension of Habeas Corpus","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","partisan-politics"],"wordCount":1332,"fk":16.8,"notable":false},{"id":"1861-08-12_proclamation-of-a-national-fast-day","date":"1861-08-12","title":"Proclamation of a National Fast Day","era":"wartime","audience":"General Public","themes":["war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality"],"wordCount":459,"fk":17.5,"notable":false},{"id":"1861-11-26_message-to-the-senate-and-house-on-compensated-emancipation-","date":"1861-11-26","title":"Message to the Senate and House on Compensated Emancipation in Delaware","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":2929,"fk":17.2,"notable":false},{"id":"1861-12-03_first-annual-message","date":"1861-12-03","title":"First Annual Message","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":7052,"fk":15.3,"notable":false},{"id":"1862-01-17_message-to-the-senate-on-the-trent-affair","date":"1862-01-17","title":"Message to the Senate on the Trent Affair","era":"wartime","audience":"Congress","themes":["general"],"wordCount":139,"fk":null,"notable":false},{"id":"1862-03-06_message-to-the-senate-transmitting-diplomatic-correspondence","date":"1862-03-06","title":"Message to the Senate Transmitting Diplomatic Correspondence on Slavery","era":"wartime","audience":"Congress","themes":["war-policy","national-unity"],"wordCount":103,"fk":null,"notable":false},{"id":"1862-03-06_special-message-to-congress-on-compensated-emancipation","date":"1862-03-06","title":"Special Message to Congress on Compensated Emancipation","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":2929,"fk":17.2,"notable":false},{"id":"1862-04-16_message-to-congress-on-emancipation-in-washington-dc","date":"1862-04-16","title":"Message to Congress on Emancipation in Washington DC","era":"wartime","audience":"Congress","themes":["slavery","national-unity","economy","constitutional-law"],"wordCount":210,"fk":12.2,"notable":false},{"id":"1862-05-19_proclamation-revoking-general-hunters-emancipation-order","date":"1862-05-19","title":"Proclamation Revoking General Hunter's Emancipation Order","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":6360,"fk":13.8,"notable":false},{"id":"1862-07-11_annual-message-to-congress-on-state-of-the-navy","date":"1862-07-11","title":"Annual Message to Congress on State of the Navy","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":14940,"fk":14.7,"notable":false},{"id":"1862-07-12_address-to-border-state-congressmen","date":"1862-07-12","title":"Address to Border State Congressmen","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","partisan-politics"],"wordCount":1066,"fk":8.8,"notable":false},{"id":"1862-07-14_message-to-congress-on-compensated-emancipation-july","date":"1862-07-14","title":"Message to Congress on Compensated Emancipation (July)","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":2929,"fk":17.2,"notable":false},{"id":"1862-07-16_address-on-colonization-to-the-senate-and-house","date":"1862-07-16","title":"Address on Colonization to the Senate and House","era":"wartime","audience":"Congress","themes":["national-unity","constitutional-law","partisan-politics"],"wordCount":207,"fk":19.5,"notable":false},{"id":"1862-08-14_address-to-a-deputation-of-free-black-men-on-colonization","date":"1862-08-14","title":"Address to a Deputation of Free Black Men on Colonization","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":11387,"fk":15.0,"notable":false},{"id":"1862-08-22_letter-to-horace-greeley-reply-to-prayer-of-twenty-millions","date":"1862-08-22","title":"Letter to Horace Greeley (Reply to 'Prayer of Twenty Millions')","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":12344,"fk":14.9,"notable":false},{"id":"1862-09-13_response-to-chicago-clergy-urging-emancipation","date":"1862-09-13","title":"Response to Chicago Clergy Urging Emancipation","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality"],"wordCount":1267,"fk":10.4,"notable":false},{"id":"1862-09-22_preliminary-emancipation-proclamation","date":"1862-09-22","title":"Preliminary Emancipation Proclamation","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":5169,"fk":14.3,"notable":true},{"id":"1862-09-24_proclamation-suspending-the-writ-of-habeas-corpus","date":"1862-09-24","title":"Proclamation Suspending the Writ of Habeas Corpus","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","partisan-politics"],"wordCount":1332,"fk":16.8,"notable":false},{"id":"1862-12-01_message-to-congress-recommending-compensated-emancipation-de","date":"1862-12-01","title":"Message to Congress Recommending Compensated Emancipation (December 1862)","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":2929,"fk":17.2,"notable":false},{"id":"1862-12-01_second-annual-message","date":"1862-12-01","title":"Second Annual Message","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":8550,"fk":11.9,"notable":false},{"id":"1863-01-01_annual-message-transmitting-the-emancipation-proclamation-to","date":"1863-01-01","title":"Annual Message Transmitting the Emancipation Proclamation to Congress","era":"wartime","audience":"Congress","themes":["partisan-politics"],"wordCount":242,"fk":6.1,"notable":true},{"id":"1863-01-01_emancipation-proclamation","date":"1863-01-01","title":"Emancipation Proclamation","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":713,"fk":20.7,"notable":true},{"id":"1863-01-19_reply-to-the-working-men-of-manchester-england","date":"1863-01-19","title":"Reply to the Working Men of Manchester, England","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","partisan-politics"],"wordCount":630,"fk":14.0,"notable":false},{"id":"1863-02-02_reply-to-the-workingmen-of-london","date":"1863-02-02","title":"Reply to the Workingmen of London","era":"wartime","audience":"General Public","themes":["slavery","emancipation","national-unity"],"wordCount":179,"fk":null,"notable":false},{"id":"1863-03-10_proclamation-of-amnesty-for-deserters","date":"1863-03-10","title":"Proclamation of Amnesty for Deserters","era":"wartime","audience":"General Public","themes":["emancipation","national-unity","constitutional-law"],"wordCount":446,"fk":22.0,"notable":false},{"id":"1863-03-18_address-at-the-sanitary-commission-fair-washington-dc","date":"1863-03-18","title":"Address at the Sanitary Commission Fair, Washington DC","era":"wartime","audience":"General Public","themes":["slavery","emancipation","national-unity"],"wordCount":591,"fk":7.9,"notable":false},{"id":"1863-03-30_proclamation-of-a-day-of-national-prayer-and-humiliation","date":"1863-03-30","title":"Proclamation of a Day of National Prayer and Humiliation","era":"wartime","audience":"General Public","themes":["war-policy","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":549,"fk":20.0,"notable":false},{"id":"1863-07-07_response-to-a-serenade-after-gettysburg","date":"1863-07-07","title":"Response to a Serenade (After Gettysburg)","era":"wartime","audience":"General Public","themes":["war-policy","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":1187,"fk":16.8,"notable":false},{"id":"1863-07-15_proclamation-of-thanksgiving-for-gettysburg-and-vicksburg","date":"1863-07-15","title":"Proclamation of Thanksgiving for Gettysburg and Vicksburg","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":5071,"fk":14.5,"notable":false},{"id":"1863-07-30_order-of-retaliation","date":"1863-07-30","title":"Order of Retaliation","era":"wartime","audience":"General Public","themes":["slavery","war-policy","national-unity","economy","constitutional-law"],"wordCount":225,"fk":13.8,"notable":false},{"id":"1863-08-26_public-letter-to-james-conkling","date":"1863-08-26","title":"Public Letter to James Conkling","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":3393,"fk":7.5,"notable":false},{"id":"1863-09-07_address-at-the-dedication-of-the-soldiers-home-inaugural-add","date":"1863-09-07","title":"Address at the Dedication of the Soldiers' Home (Inaugural Address Fragment)","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":4158,"fk":14.5,"notable":false},{"id":"1863-10-03_proclamation-of-thanksgiving-national-holiday","date":"1863-10-03","title":"Proclamation of Thanksgiving (National Holiday)","era":"wartime","audience":"General Public","themes":["war-policy","emancipation","national-unity","constitutional-law","religion-morality"],"wordCount":393,"fk":21.3,"notable":false},{"id":"1863-11-19_gettysburg-address","date":"1863-11-19","title":"Gettysburg Address","era":"wartime","audience":"General Public","themes":["war-policy","emancipation","national-unity","religion-morality"],"wordCount":272,"fk":10.9,"notable":true},{"id":"1863-12-08_proclamation-of-amnesty-and-reconstruction-10-plan","date":"1863-12-08","title":"Proclamation of Amnesty and Reconstruction (10% Plan)","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":1149,"fk":22.0,"notable":false},{"id":"1863-12-08_third-annual-message","date":"1863-12-08","title":"Third Annual Message","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":6221,"fk":14.2,"notable":false},{"id":"1864-02-01_proclamation-calling-500000-volunteers","date":"1864-02-01","title":"Proclamation Calling 500,000 Volunteers","era":"wartime","audience":"General Public","themes":["war-policy","emancipation","national-unity","constitutional-law"],"wordCount":419,"fk":15.7,"notable":false},{"id":"1864-04-04_address-on-reconstruction-to-albert-g-hodges","date":"1864-04-04","title":"Address on Reconstruction to Albert G. Hodges","era":"wartime","audience":"General Public","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics"],"wordCount":1073,"fk":9.2,"notable":false},{"id":"1864-04-18_address-at-the-sanitary-commission-fair-baltimore","date":"1864-04-18","title":"Address at the Sanitary Commission Fair, Baltimore","era":"wartime","audience":"General Public","themes":["slavery","emancipation","national-unity"],"wordCount":591,"fk":7.9,"notable":false},{"id":"1864-06-16_address-at-the-great-central-sanitary-fair-philadelphia","date":"1864-06-16","title":"Address at the Great Central Sanitary Fair, Philadelphia","era":"wartime","audience":"Military/Soldiers","themes":["war-policy","national-unity","economy","religion-morality"],"wordCount":469,"fk":7.5,"notable":false},{"id":"1864-07-08_message-to-congress-on-reconstruction-wade-davis-bill-veto","date":"1864-07-08","title":"Message to Congress on Reconstruction (Wade-Davis Bill Veto)","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":3249,"fk":17.6,"notable":false},{"id":"1864-08-18_address-to-the-164th-ohio-regiment","date":"1864-08-18","title":"Address to the 164th Ohio Regiment","era":"wartime","audience":"Military/Soldiers","themes":["war-policy"],"wordCount":388,"fk":7.8,"notable":false},{"id":"1864-08-22_address-to-the-166th-ohio-regiment","date":"1864-08-22","title":"Address to the 166th Ohio Regiment","era":"wartime","audience":"Military/Soldiers","themes":["national-unity"],"wordCount":238,"fk":9.5,"notable":false},{"id":"1864-08-23_memorandum-concerning-his-probable-failure-of-re-election-bl","date":"1864-08-23","title":"Memorandum Concerning His Probable Failure of Re-Election (Blind Memorandum)","era":"wartime","audience":"General Public","themes":["national-unity","economy","partisan-politics"],"wordCount":399,"fk":9.4,"notable":false},{"id":"1864-08-31_address-to-the-148th-ohio-regiment","date":"1864-08-31","title":"Address to the 148th Ohio Regiment","era":"wartime","audience":"Military/Soldiers","themes":["constitutional-law"],"wordCount":345,"fk":13.5,"notable":false},{"id":"1864-09-03_address-to-the-ohio-delegation-on-peace-negotiations","date":"1864-09-03","title":"Address to the Ohio Delegation (On Peace Negotiations)","era":"wartime","audience":"General Public","themes":["war-policy","constitutional-law"],"wordCount":85,"fk":null,"notable":false},{"id":"1864-11-10_response-to-a-serenade-after-re-election","date":"1864-11-10","title":"Response to a Serenade (After Re-Election)","era":"wartime","audience":"General Public","themes":["war-policy","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":1200,"fk":17.0,"notable":false},{"id":"1864-12-06_fourth-annual-message","date":"1864-12-06","title":"Fourth Annual Message","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","economy","constitutional-law","religion-morality","partisan-politics","territorial-expansion"],"wordCount":5997,"fk":12.9,"notable":false},{"id":"1864-12-26_address-on-the-surrender-of-savannah-december-1864","date":"1864-12-26","title":"Address on the Surrender of Savannah (December 1864)","era":"wartime","audience":"General Public","themes":["national-unity","constitutional-law"],"wordCount":53,"fk":null,"notable":false},{"id":"1865-02-01_message-to-congress-on-the-thirteenth-amendment","date":"1865-02-01","title":"Message to Congress on the Thirteenth Amendment","era":"wartime","audience":"Congress","themes":["slavery","war-policy","emancipation","national-unity","constitutional-law","partisan-politics"],"wordCount":370,"fk":9.1,"notable":false},{"id":"1865-03-04_second-inaugural-address","date":"1865-03-04","title":"Second Inaugural Address","era":"wartime","audience":"General Public","themes":["slavery","war-policy","national-unity","religion-morality","partisan-politics"],"wordCount":705,"fk":11.3,"notable":true},{"id":"1865-03-17_response-to-a-serenade-after-the-second-inaugural","date":"1865-03-17","title":"Response to a Serenade after the Second Inaugural","era":"wartime","audience":"General Public","themes":["war-policy","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":1187,"fk":16.8,"notable":false},{"id":"1865-03-17_speech-to-the-140th-indiana-regiment","date":"1865-03-17","title":"Speech to the 140th Indiana Regiment","era":"wartime","audience":"Military/Soldiers","themes":["slavery","war-policy","partisan-politics"],"wordCount":553,"fk":7.2,"notable":false},{"id":"1865-04-02_response-to-a-serenade-on-the-fall-of-richmond","date":"1865-04-02","title":"Response to a Serenade on the Fall of Richmond","era":"wartime","audience":"General Public","themes":["war-policy","national-unity","constitutional-law","religion-morality","partisan-politics"],"wordCount":1187,"fk":16.8,"notable":false},{"id":"1865-04-11_last-public-address","date":"1865-04-11","title":"Last Public Address","era":"post-war","audience":"General Public","themes":["war-policy","national-unity","economy","constitutional-law","partisan-politics"],"wordCount":1317,"fk":17.3,"notable":true}];
+
+const EVENTS = [
+  {date:"1854-10-16",label:"Peoria Speech"},
+  {date:"1858-06-16",label:"House Divided"},
+  {date:"1860-02-27",label:"Cooper Union"},
+  {date:"1861-03-04",label:"1st Inaugural"},
+  {date:"1861-04-12",label:"Fort Sumter"},
+  {date:"1863-01-01",label:"Emancipation Proc."},
+  {date:"1863-11-19",label:"Gettysburg"},
+  {date:"1865-03-04",label:"2nd Inaugural"},
+];
+
+const ERA_COLOR = {'pre-war':'#4a9eff','wartime':'#ff6b4a','post-war':'#4aff9e'};
+const THEME_COLOR = {
+  'slavery':'#2dd4bf','emancipation':'#fb923c','constitutional-law':'#818cf8',
+  'national-unity':'#60a5fa','war-policy':'#f87171','religion-morality':'#a78bfa',
+  'partisan-politics':'#facc15','economy':'#34d399','territorial-expansion':'#f472b6','general':'#6b7280'
+};
+
+let activeEras = new Set(['pre-war','wartime','post-war']);
+let activeTheme = 'all';
+let selectedId = null;
+
+function toTS(d){ return new Date(d).getTime(); }
+const minTS = toTS(SPEECHES[0].date);
+const maxTS = toTS(SPEECHES[SPEECHES.length-1].date);
+
+function filtered(){
+  return SPEECHES.filter(s => {
+    if(!activeEras.has(s.era)) return false;
+    if(activeTheme !== 'all' && !s.themes.includes(activeTheme)) return false;
+    return true;
+  });
+}
+
+function xPos(date, W, pad){ return pad + (toTS(date)-minTS)/(maxTS-minTS)*(W-2*pad); }
+
+// ── FK Chart ──
+const fkCanvas = document.getElementById('fk-chart');
+const fkCtx = fkCanvas.getContext('2d');
+let fkHitmap = [];
+
+function drawFK(){
+  const W = fkCanvas.clientWidth; fkCanvas.width = W; fkCanvas.height = 220;
+  const ctx = fkCtx; const pad = 48; const H = 220;
+  const data = filtered().filter(s => s.fk !== null);
+  const fkMin = 8, fkMax = 20;
+  fkHitmap = [];
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#1a1d27'; ctx.fillRect(0,0,W,H);
+
+  // Grid lines
+  ctx.strokeStyle = '#2e3148'; ctx.lineWidth = 1;
+  [10,12,14,16,18,20].forEach(g => {
+    const y = H-pad-(g-fkMin)/(fkMax-fkMin)*(H-2*pad);
+    ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-10,y); ctx.stroke();
+    ctx.fillStyle = '#8b8fa8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('Gr '+g, pad-4, y+4);
+  });
+
+  // Event lines
+  EVENTS.forEach(ev => {
+    const x = xPos(ev.date, W, pad);
+    ctx.strokeStyle = 'rgba(201,168,76,0.25)'; ctx.setLineDash([3,4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x,pad-10); ctx.lineTo(x,H-pad); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.save(); ctx.translate(x,pad-12); ctx.rotate(-Math.PI/2);
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(ev.label, 0, 0); ctx.restore();
+  });
+
+  // Year axis
+  ctx.fillStyle = '#8b8fa8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  for(let yr=1835; yr<=1865; yr+=5){
+    const x = xPos(yr+'-01-01', W, pad);
+    ctx.fillText(yr, x, H-8);
+  }
+
+  // Rolling average
+  const sorted = [...data].sort((a,b)=>toTS(a.date)-toTS(b.date));
+  const wnd = 6;
+  const avgs = sorted.map((_,i) => {
+    const slice = sorted.slice(Math.max(0,i-wnd+1), i+1);
+    return slice.reduce((s,x)=>s+x.fk,0)/slice.length;
+  });
+  ctx.strokeStyle = 'rgba(240,201,106,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([]);
+  ctx.beginPath();
+  sorted.forEach((s,i) => {
+    const x = xPos(s.date,W,pad);
+    const y = H-pad-(avgs[i]-fkMin)/(fkMax-fkMin)*(H-2*pad);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Dots
+  const maxWC = Math.max(...data.map(s=>s.wordCount));
+  data.forEach(s => {
+    const x = xPos(s.date,W,pad);
+    const y = H-pad-(s.fk-fkMin)/(fkMax-fkMin)*(H-2*pad);
+    const r = 3 + (s.wordCount/maxWC)*9;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = s.id===selectedId ? '#fff' : ERA_COLOR[s.era]+(s.notable?'':'99');
+    ctx.fill();
+    if(s.notable){ ctx.strokeStyle = '#f0c96a'; ctx.lineWidth=1.5; ctx.stroke(); }
+    fkHitmap.push({x,y,r,s});
+  });
+}
+
+fkCanvas.addEventListener('click', e => {
+  const rect = fkCanvas.getBoundingClientRect();
+  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+  const scaleX = fkCanvas.width/rect.width, scaleY = fkCanvas.height/rect.height;
+  const cx = sx*scaleX, cy = sy*scaleY;
+  let hit = null;
+  fkHitmap.forEach(h => { if(Math.hypot(cx-h.x,cy-h.y)<=h.r+4) hit=h; });
+  if(hit){ selectedId=hit.s.id; showDetail(hit.s); }
+  else { selectedId=null; hideDetail(); }
+  drawAll();
+});
+
+fkCanvas.style.cursor='pointer';
+fkCanvas.addEventListener('mousemove', e => {
+  const rect = fkCanvas.getBoundingClientRect();
+  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+  const scaleX = fkCanvas.width/rect.width, scaleY = fkCanvas.height/rect.height;
+  const cx=sx*scaleX, cy=sy*scaleY;
+  let hit=false;
+  fkHitmap.forEach(h=>{ if(Math.hypot(cx-h.x,cy-h.y)<=h.r+4) hit=true; });
+  fkCanvas.style.cursor=hit?'pointer':'default';
+});
+
+// ── Word Count Chart ──
+const wcCanvas = document.getElementById('wc-chart');
+const wcCtx = wcCanvas.getContext('2d');
+
+function drawWC(){
+  const W = wcCanvas.clientWidth; wcCanvas.width = W; wcCanvas.height = 140;
+  const ctx = wcCtx; const pad = 48; const H = 140;
+  const data = filtered().sort((a,b)=>toTS(a.date)-toTS(b.date));
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  const maxWC = Math.max(...data.map(s=>s.wordCount),1);
+  const plotW = W-pad-10;
+  const bw = Math.max(1, plotW/125*0.7);
+  data.forEach(s => {
+    const x = xPos(s.date,W,pad);
+    const bh = (s.wordCount/maxWC)*(H-pad-10);
+    ctx.fillStyle = ERA_COLOR[s.era]+'aa';
+    ctx.fillRect(x-bw/2, H-pad-bh, bw, bh);
+  });
+  // y axis
+  [5000,10000,20000].forEach(v=>{
+    const y = H-pad-(v/maxWC)*(H-pad-10);
+    ctx.strokeStyle='#2e3148'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-10,y); ctx.stroke();
+    ctx.fillStyle='#8b8fa8'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+    ctx.fillText((v/1000)+'k',pad-3,y+3);
+  });
+  // year axis
+  ctx.fillStyle='#8b8fa8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  for(let yr=1835;yr<=1865;yr+=5){ ctx.fillText(yr,xPos(yr+'-01-01',W,pad),H-6); }
+}
+
+// ── Theme Strip Chart ──
+const thCanvas = document.getElementById('theme-chart');
+const thCtx = thCanvas.getContext('2d');
+
+function drawTheme(){
+  const W = thCanvas.clientWidth; thCanvas.width = W; thCanvas.height = 120;
+  const ctx = thCtx; const pad = 48; const H = 120;
+  const data = SPEECHES.filter(s=>activeEras.has(s.era)).sort((a,b)=>toTS(a.date)-toTS(b.date));
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  const bw = Math.max(2,(W-pad-10)/data.length);
+  data.forEach((s,i) => {
+    const x = pad + i*bw;
+    const colors = s.themes.map(t=>THEME_COLOR[t]||'#555');
+    const segH = (H-40)/colors.length;
+    colors.forEach((c,j)=>{ ctx.fillStyle=c+'cc'; ctx.fillRect(x,20+j*segH,bw-1,segH); });
+  });
+  // legend
+  const themes = ['slavery','emancipation','constitutional-law','national-unity','war-policy','religion-morality','partisan-politics'];
+  let lx=pad; const ly=H-12;
+  ctx.font='8px sans-serif'; ctx.textAlign='left';
+  themes.forEach(t=>{
+    ctx.fillStyle=THEME_COLOR[t]; ctx.fillRect(lx,ly-7,8,8);
+    ctx.fillStyle='#8b8fa8'; ctx.fillText(t.replace('-',' '),lx+10,ly);
+    lx += ctx.measureText(t.replace('-',' ')).width+20;
+    if(lx>W-80){lx=pad;}
+  });
+  // year axis
+  ctx.fillStyle='#8b8fa8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  for(let yr=1835;yr<=1865;yr+=5){ ctx.fillText(yr,xPos(yr+'-01-01',W,pad),15); }
+}
+
+// ── Detail Panel ──
+function showDetail(s){
+  const panel = document.getElementById('detail');
+  const eraCls = s.era==='pre-war'?'era-pre':s.era==='wartime'?'era-war':'era-post';
+  const eraLabel = s.era==='pre-war'?'Pre-War':s.era==='wartime'?'Wartime':'Post-War';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div class="detail-title">${s.title}</div>
+        <div class="detail-meta">${s.date} &nbsp;&middot;&nbsp; ${s.audience} &nbsp;
+          <span class="era-badge ${eraCls}">${eraLabel}</span>
+          ${s.notable?'<span class="era-badge" style="background:rgba(240,201,106,.15);border:1px solid rgba(240,201,106,.3);color:#f0c96a;margin-left:.4rem">Notable</span>':''}
+        </div>
+      </div>
+      <button onclick="hideDetail();selectedId=null;drawAll()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:.2rem .6rem;cursor:pointer;font-family:sans-serif;font-size:.75rem">✕ close</button>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-stat"><div class="detail-stat-val">${s.wordCount.toLocaleString()}</div><div class="detail-stat-lbl">Words</div></div>
+      <div class="detail-stat"><div class="detail-stat-val">${s.fk !== null ? s.fk.toFixed(1) : 'N/A'}</div><div class="detail-stat-lbl">FK Grade</div></div>
+      <div class="detail-stat"><div class="detail-stat-val">${s.audience}</div><div class="detail-stat-lbl">Audience</div></div>
+    </div>
+    <div class="tags">${s.themes.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+  `;
+  panel.classList.add('active');
+}
+
+function hideDetail(){ document.getElementById('detail').classList.remove('active'); }
+
+// ── Filters ──
+document.querySelectorAll('.era-filter').forEach(cb=>{
+  cb.addEventListener('change',()=>{
+    activeEras = new Set([...document.querySelectorAll('.era-filter:checked')].map(c=>c.value));
+    updateCount(); drawAll();
+  });
+});
+
+const allCheck = document.querySelector('.theme-filter[value="all"]');
+document.querySelectorAll('.theme-filter:not([value="all"])').forEach(cb=>{
+  cb.addEventListener('change',()=>{
+    if(cb.checked){ allCheck.checked=false; activeTheme=cb.value; }
+    else{ activeTheme='all'; allCheck.checked=true; }
+    document.querySelectorAll('.theme-filter:not([value="all"])').forEach(c=>{ if(c!==cb) c.checked=false; });
+    updateCount(); drawAll();
+  });
+});
+allCheck.addEventListener('change',()=>{
+  if(allCheck.checked){ activeTheme='all'; document.querySelectorAll('.theme-filter:not([value="all"])').forEach(c=>c.checked=false); }
+  updateCount(); drawAll();
+});
+
+function updateCount(){
+  document.getElementById('count-display').textContent = filtered().length+' speeches shown';
+}
+
+function drawAll(){ drawFK(); drawWC(); drawTheme(); }
+
+// Draw on load and resize
+window.addEventListener('resize', drawAll);
+drawAll();
+</script>
+</body>
+</html>
